@@ -48,7 +48,33 @@ export class PatternStorageService {
       return undefined;
     }
 
-    const metadata = this.readMetadata(JSON.parse(stored) as unknown, denominators);
+    return this.readSnapshot(JSON.parse(stored) as unknown, instruments, noteValues, denominators, createNoteId);
+  }
+
+  importJson(
+    serialized: string,
+    instruments: readonly DrumInstrument[],
+    noteValues: readonly { value: NoteValue }[],
+    denominators: readonly number[],
+    createNoteId: () => string,
+  ): PatternSnapshot {
+    let value: unknown;
+    try {
+      value = JSON.parse(serialized) as unknown;
+    } catch {
+      throw new Error('Ungültige JSON-Datei.');
+    }
+    return this.readSnapshot(value, instruments, noteValues, denominators, createNoteId);
+  }
+
+  private readSnapshot(
+    value: unknown,
+    instruments: readonly DrumInstrument[],
+    noteValues: readonly { value: NoteValue }[],
+    denominators: readonly number[],
+    createNoteId: () => string,
+  ): PatternSnapshot {
+    const metadata = this.readMetadata(value, denominators);
     if (!metadata) {
       throw new Error('Ungültiges Pattern-Format');
     }
@@ -114,6 +140,7 @@ export class PatternStorageService {
       measures?: unknown;
       numerator?: unknown;
       denominator?: unknown;
+      timeSignature?: unknown;
       noteTextPosition?: unknown;
       autoBeaming?: unknown;
       stemDirection?: unknown;
@@ -121,8 +148,15 @@ export class PatternStorageService {
       rests?: unknown;
       annotations?: unknown;
     };
-    const numerator = saved.numerator ?? 4;
-    const denominator = saved.denominator ?? 4;
+    const timeSignature =
+      typeof saved.timeSignature === 'string'
+        ? /^(\d+)\/(\d+)$/.exec(saved.timeSignature)
+        : undefined;
+    if (saved.timeSignature !== undefined && !timeSignature) {
+      return undefined;
+    }
+    const numerator = saved.numerator ?? (timeSignature ? Number(timeSignature[1]) : 4);
+    const denominator = saved.denominator ?? (timeSignature ? Number(timeSignature[2]) : 4);
     const noteTextPosition =
       saved.noteTextPosition === 'above' || saved.noteTextPosition === 'below'
         ? saved.noteTextPosition

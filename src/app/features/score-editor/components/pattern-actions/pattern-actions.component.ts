@@ -21,7 +21,20 @@ export class PatternActionsComponent {
   protected readonly validationMessage = signal('');
   readonly cleared = output<void>();
   readonly exported = output<void>();
+  readonly importRequested = output<File>();
   readonly pdfExported = output<PdfExportSettings>();
+
+  protected requestImport(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+      throw new Error('Ungültiges Import-Dateifeld.');
+    }
+    const file = target.files?.[0];
+    target.value = '';
+    if (file) {
+      this.importRequested.emit(file);
+    }
+  }
 
   protected openPdfSettings(): void {
     this.validationMessage.set('');

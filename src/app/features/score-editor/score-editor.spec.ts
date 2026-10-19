@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf';
 import { vi } from 'vitest';
 import 'svg2pdf.js';
 import { ScoreEditorComponent } from './score-editor.component';
+import { DRUM_INSTRUMENTS } from './score-editor.constants';
 import { DrumAudioService } from './services/drum-audio.service';
 
 function openDurationMenu(
@@ -764,6 +765,59 @@ describe('ScoreEditorComponent', () => {
       }
       fixture.destroy();
     }
+  });
+
+  it('imports a pattern from a selected JSON file', async () => {
+    const fixture = TestBed.createComponent(ScoreEditorComponent);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const importButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="JSON importieren"]',
+    );
+    const fileInput = compiled.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!importButton || !fileInput) {
+      throw new Error('JSON-Import wurde nicht angezeigt.');
+    }
+
+    const pattern = Object.fromEntries(
+      DRUM_INSTRUMENTS.map(({ id }) => [
+        id,
+        [id === 'kick' ? [{ id: 'note-imported', start: 0, duration: 4 }] : []],
+      ]),
+    );
+    const tracks = Object.fromEntries(DRUM_INSTRUMENTS.map(({ id }) => [id, [[]]]));
+    const fileContents = JSON.stringify({
+      tempo: 112,
+      timeSignature: '6/8',
+      measures: 1,
+      pattern,
+      rests: tracks,
+      annotations: [[]],
+    });
+    const file = new File([fileContents], 'pattern.json', { type: 'application/json' });
+    Object.defineProperty(file, 'text', {
+      configurable: true,
+      value: () => Promise.resolve(fileContents),
+    });
+    Object.defineProperty(fileInput, 'files', {
+      configurable: true,
+      value: [file],
+    });
+
+    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(compiled.querySelectorAll('.measure-sheet')).toHaveLength(1);
+    expect(
+      compiled.querySelector(
+        '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="kick"]',
+      ),
+    ).toBeTruthy();
+    expect(compiled.querySelector('[role="status"]')?.textContent).toContain(
+      'Pattern wurde importiert',
+    );
+    fixture.destroy();
   });
 
   it('undoes deleting selected notes', async () => {

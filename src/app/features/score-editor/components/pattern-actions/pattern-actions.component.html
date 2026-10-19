@@ -1,12 +1,27 @@
 <section class="export-card">
   <div>
     <h3>Dein Beat, zum Mitnehmen</h3>
-    <p>Speichere dein Pattern im Browser oder exportiere es als JSON-Datei oder PDF.</p>
+    <p>Speichere dein Pattern im Browser, importiere oder exportiere JSON-Dateien und erstelle PDFs.</p>
   </div>
   <div class="export-actions">
     <button class="button button-quiet clear-button" type="button" (click)="cleared.emit()">
       Leeren
     </button>
+    <button
+      class="button button-quiet"
+      type="button"
+      aria-label="JSON importieren"
+      (click)="patternFileInput.click()"
+    >
+      JSON importieren
+    </button>
+    <input
+      #patternFileInput
+      type="file"
+      accept=".json,application/json"
+      hidden
+      (change)="requestImport($event)"
+    />
     <button
       class="button button-quiet"
       type="button"

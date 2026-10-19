@@ -18,6 +18,7 @@ import type {
   NoteTextPosition,
   NoteValue,
   Pattern,
+  PatternSnapshot,
   RenderedAnnotation,
   RestPattern,
   ScoreAnnotation,
@@ -90,6 +91,10 @@ interface UndoEntry {
   pattern: Pattern;
   rests: RestPattern;
   annotations: ScoreAnnotation[][];
+  tempo?: number;
+  noteTextPosition?: NoteTextPosition;
+  autoBeaming?: boolean;
+  stemDirection?: StemDirection;
 }
 
 @Component({
@@ -1550,6 +1555,8 @@ export class ScoreEditorComponent implements OnDestroy {
     const data = {
       title: 'Mein Schlagzeug-Pattern',
       tempo: this.tempo(),
+      numerator: this.timeSignatureNumerator(),
+      denominator: this.timeSignatureDenominator(),
       timeSignature: `${this.timeSignatureNumerator()}/${this.timeSignatureDenominator()}`,
       measures: this.measureIndexes().length,
       subdivision: this.subdivisionLabel(),
@@ -1568,6 +1575,29 @@ export class ScoreEditorComponent implements OnDestroy {
     link.click();
     URL.revokeObjectURL(url);
     this.message.set('Das Pattern wurde als JSON-Datei exportiert.');
+  }
+
+  protected async importPattern(file: File): Promise<void> {
+    try {
+      const imported = this.patternStorage.importJson(
+        await file.text(),
+        this.instruments,
+        this.noteValues,
+        this.timeSignatureDenominators,
+        () => this.createNoteId(),
+      );
+      if (this.isPlaying()) {
+        this.stopPlayback();
+      }
+      this.recordUndo(true);
+      this.applyPatternSnapshot(imported);
+      this.message.set('Das Pattern wurde importiert.');
+    } catch (error) {
+      console.error('Pattern-Datei konnte nicht importiert werden.', error);
+      this.message.set(
+        'Die JSON-Datei konnte nicht importiert werden. Bitte wähle eine gültige Taktwerk-Pattern-Datei.',
+      );
+    }
   }
 
   protected async exportPdf(settings: PdfExportSettings): Promise<void> {
@@ -1631,6 +1661,18 @@ export class ScoreEditorComponent implements OnDestroy {
     this.measureIndexes.set(Array.from({ length: entry.measures }, (_, index) => index));
     this.timeSignatureNumerator.set(entry.numerator);
     this.timeSignatureDenominator.set(entry.denominator);
+    if (entry.tempo !== undefined) {
+      this.tempo.set(entry.tempo);
+    }
+    if (entry.noteTextPosition !== undefined) {
+      this.noteTextPosition.set(entry.noteTextPosition);
+    }
+    if (entry.autoBeaming !== undefined) {
+      this.autoBeaming.set(entry.autoBeaming);
+    }
+    if (entry.stemDirection !== undefined) {
+      this.stemDirection.set(entry.stemDirection);
+    }
     this.pattern.set(entry.pattern);
     this.rests.set(entry.rests);
     this.annotations.set(entry.annotations);
@@ -1647,7 +1689,7 @@ export class ScoreEditorComponent implements OnDestroy {
     return this.measureIndexes().length * this.stepsPerMeasure();
   }
 
-  private recordUndo(): void {
+  private recordUndo(includeSettings = false): void {
     const entry: UndoEntry = {
       measures: this.measureIndexes().length,
       numerator: this.timeSignatureNumerator(),
@@ -1655,6 +1697,14 @@ export class ScoreEditorComponent implements OnDestroy {
       pattern: this.pattern(),
       rests: this.rests(),
       annotations: this.annotations(),
+      ...(includeSettings
+        ? {
+            tempo: this.tempo(),
+            noteTextPosition: this.noteTextPosition(),
+            autoBeaming: this.autoBeaming(),
+            stemDirection: this.stemDirection(),
+          }
+        : {}),
     };
     this.undoHistory.update((history) => [
       ...history.slice(-(MAX_UNDO_ENTRIES - 1)),
@@ -1765,34 +1815,58 @@ export class ScoreEditorComponent implements OnDestroy {
         return;
       }
 
-      this.tempo.set(restored.tempo);
-      this.timeSignatureNumerator.set(restored.numerator);
-      this.timeSignatureDenominator.set(restored.denominator);
-      this.noteTextPosition.set(restored.noteTextPosition ?? 'above');
-      this.autoBeaming.set(restored.autoBeaming ?? true);
-      this.stemDirection.set(restored.stemDirection ?? 'up');
-      this.measureIndexes.set(Array.from({ length: restored.measures }, (_, index) => index));
-      this.pattern.set(this.withStemDirection(restored.pattern, restored.stemDirection ?? 'up'));
-      this.rests.set(restored.rests ?? this.createEmptyRests(restored.measures));
-      this.annotations.set(restored.annotations);
-      this.noteIdCounter = Math.max(
-        this.noteIdCounter,
-        ...this.instruments.flatMap((instrument) =>
-          this.pattern()[instrument.id]
-            .flat()
-            .map((note) => Number(note.id.match(/^note-(\d+)$/)?.[1] ?? 0)),
-        ),
-      );
-      this.annotationIdCounter = Math.max(
-        this.annotationIdCounter,
-        ...this.annotations()
-          .flat()
-          .map((annotation) => Number(annotation.id.match(/^text-(\d+)$/)?.[1] ?? 0)),
-      );
+      this.applyPatternSnapshot(restored);
     } catch (error) {
       console.error('Gespeichertes Pattern konnte nicht geladen werden.', error);
       this.message.set('Das gespeicherte Pattern konnte nicht geladen werden. Es wird ein neues Blatt angezeigt.');
     }
+  }
+
+  private applyPatternSnapshot(snapshot: PatternSnapshot): void {
+    this.tempo.set(snapshot.tempo);
+    this.timeSignatureNumerator.set(snapshot.numerator);
+    this.timeSignatureDenominator.set(snapshot.denominator);
+    this.noteTextPosition.set(snapshot.noteTextPosition ?? 'above');
+    this.autoBeaming.set(snapshot.autoBeaming ?? true);
+    this.stemDirection.set(snapshot.stemDirection ?? 'up');
+    this.measureIndexes.set(Array.from({ length: snapshot.measures }, (_, index) => index));
+    this.pattern.set(this.withStemDirection(snapshot.pattern, snapshot.stemDirection ?? 'up'));
+    this.rests.set(snapshot.rests ?? this.createEmptyRests(snapshot.measures));
+    this.annotations.set(snapshot.annotations);
+    this.noteIdCounter = Math.max(
+      this.noteIdCounter,
+      ...this.instruments.flatMap((instrument) =>
+        this.pattern()[instrument.id]
+          .flat()
+          .map((note) => Number(note.id.match(/^note-(\d+)$/)?.[1] ?? 0)),
+      ),
+    );
+    this.restIdCounter = Math.max(
+      this.restIdCounter,
+      ...this.instruments.flatMap((instrument) =>
+        this.rests()[instrument.id]
+          .flat()
+          .map((rest) => Number(rest.id.match(/^rest-(\d+)$/)?.[1] ?? 0)),
+      ),
+    );
+    this.tupletIdCounter = Math.max(
+      this.tupletIdCounter,
+      ...this.instruments.flatMap((instrument) =>
+        this.pattern()[instrument.id]
+          .flat()
+          .flatMap((note) =>
+            note.tuplet ? [Number(note.tuplet.id.match(/^tuplet-(\d+)$/)?.[1] ?? 0)] : [],
+          ),
+      ),
+    );
+    this.annotationIdCounter = Math.max(
+      this.annotationIdCounter,
+      ...this.annotations()
+        .flat()
+        .map((annotation) => Number(annotation.id.match(/^text-(\d+)$/)?.[1] ?? 0)),
+    );
+    this.activeTupletGroup.set(undefined);
+    this.clearNoteSelection();
   }
 
   private removeNoteById(instrumentId: DrumId, sourceMeasure: number, noteId: string): void {

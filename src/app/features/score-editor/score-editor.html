@@ -142,6 +142,7 @@
     <app-pattern-actions
       (cleared)="clearPattern()"
       (exported)="exportPattern()"
+      (importRequested)="importPattern($event)"
       (pdfExported)="exportPdf($event)"
     />
   </main>
