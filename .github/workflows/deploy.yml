@@ -43,6 +43,14 @@ jobs:
             npm install
           fi
 
+      - name: Run tests
+        id: tests
+        run: npm test -- --watch=false
+
+      - name: Warn about failed tests
+        if: failure() && steps.tests.outcome == 'failure'
+        run: echo "::warning::Mindestens ein Test ist fehlgeschlagen. Build und Deployment werden abgebrochen."
+
       - name: Build Angular app
         run: npm run build -- --base-href "/${{ github.event.repository.name }}/"
 
