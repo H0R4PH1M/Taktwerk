@@ -75,3 +75,9 @@ Anschließend `http://localhost:4200/` im Browser öffnen. Für die Wiedergabe m
 npm test
 npm run build
 ```
+
+## Veröffentlichung auf GitHub Pages
+
+Der Workflow veröffentlicht den Produktionsbuild bei jedem Push auf `main` sowie manuell über
+GitHub Actions. In den Repository-Einstellungen unter **Pages** muss als Build-Quelle einmalig
+**GitHub Actions** ausgewählt werden.
