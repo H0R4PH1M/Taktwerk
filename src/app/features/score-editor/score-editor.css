@@ -27,3 +27,7 @@
   padding: 0 4px;
   color: #c3c5bc;
 }
+
+.footer code {
+  font: inherit;
+}

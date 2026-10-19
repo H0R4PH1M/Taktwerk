@@ -50,6 +50,7 @@ import { PatternActionsComponent } from './components/pattern-actions/pattern-ac
 import type { PdfExportSettings } from './models/pdf-export.model';
 import { ScoreSheetComponent } from './components/score-sheet/score-sheet.component';
 import type { ScoreMeasureView } from './components/score-sheet/score-sheet.component';
+import { BUILD_INFO } from '../../build-info.generated';
 
 const MAX_UNDO_ENTRIES = 50;
 
@@ -110,6 +111,7 @@ interface UndoEntry {
   styleUrl: './score-editor.css',
 })
 export class ScoreEditorComponent implements OnDestroy {
+  protected readonly buildInfo = BUILD_INFO;
   protected readonly instruments = DRUM_INSTRUMENTS;
   protected readonly noteValues = NOTE_VALUES;
   protected readonly staffLines = STAFF_LINES;

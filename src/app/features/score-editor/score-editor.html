@@ -146,5 +146,9 @@
       (pdfExported)="exportPdf($event)"
     />
   </main>
-  <footer class="footer">Taktwerk <span>·</span> Dein kreativer Rhythmusraum <span>·</span> Made by Horaphim</footer>
+  <footer class="footer">
+    Taktwerk <span>·</span> Dein kreativer Rhythmusraum <span>·</span> Made by Horaphim
+    <span>·</span> Commit <code>{{ buildInfo.commit }}</code>
+    <span>·</span> Build {{ buildInfo.builtAtLabel }}
+  </footer>
 </div>

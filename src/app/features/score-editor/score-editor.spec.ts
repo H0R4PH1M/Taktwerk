@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import 'svg2pdf.js';
 import { ScoreEditorComponent } from './score-editor.component';
 import { DRUM_INSTRUMENTS } from './score-editor.constants';
+import { BUILD_INFO } from '../../build-info.generated';
 import { DrumAudioService } from './services/drum-audio.service';
 
 function openDurationMenu(
@@ -142,6 +143,15 @@ describe('ScoreEditorComponent', () => {
     expect(compiled.querySelectorAll('.measure-sheet')).toHaveLength(2);
     expect(compiled.querySelectorAll('.staff-line')).toHaveLength(10);
     expect(compiled.querySelectorAll('.score-note')).toHaveLength(24);
+  });
+
+  it('shows the build commit and timestamp in the footer', async () => {
+    const fixture = TestBed.createComponent(ScoreEditorComponent);
+    await fixture.whenStable();
+    const footer = (fixture.nativeElement as HTMLElement).querySelector('footer.footer');
+
+    expect(footer?.textContent).toContain(BUILD_INFO.commit);
+    expect(footer?.textContent).toContain(BUILD_INFO.builtAtLabel);
   });
 
   it('chooses a note or pause value from a compact dropdown', async () => {
