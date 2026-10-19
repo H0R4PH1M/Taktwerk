@@ -79,5 +79,6 @@ npm run build
 ## Veröffentlichung auf GitHub Pages
 
 Der Workflow veröffentlicht den Produktionsbuild bei jedem Push auf `main` sowie manuell über
-GitHub Actions. In den Repository-Einstellungen unter **Pages** muss als Build-Quelle einmalig
-**GitHub Actions** ausgewählt werden.
+GitHub Actions. Er verwendet `npm ci`, wenn eine `package-lock.json` vorhanden ist, und fällt
+andernfalls auf `npm install` zurück. In den Repository-Einstellungen unter **Pages** muss als
+Build-Quelle einmalig **GitHub Actions** ausgewählt werden.
