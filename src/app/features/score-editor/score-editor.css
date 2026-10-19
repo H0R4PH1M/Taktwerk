@@ -31,3 +31,13 @@
 .footer code {
   font: inherit;
 }
+
+.footer a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.footer a:hover {
+  color: #5b755f;
+}

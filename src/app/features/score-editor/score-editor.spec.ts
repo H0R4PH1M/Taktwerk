@@ -152,6 +152,9 @@ describe('ScoreEditorComponent', () => {
 
     expect(footer?.textContent).toContain(BUILD_INFO.commit);
     expect(footer?.textContent).toContain(BUILD_INFO.builtAtLabel);
+    expect(footer?.querySelector('a[href="https://github.com/H0R4PH1M/Taktwerk"]')?.textContent).toBe(
+      'GitHub',
+    );
   });
 
   it('chooses a note or pause value from a compact dropdown', async () => {
