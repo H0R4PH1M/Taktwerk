@@ -1,0 +1,257 @@
+.score-scroll {
+  overflow-x: hidden;
+  padding: 20px;
+  background: #f3f1e9;
+}
+
+.score-paper {
+  width: 100%;
+  min-width: 0;
+  padding: 16px 18px 12px;
+  border: 1px solid #e4e0d5;
+  background-color: #fffefa;
+  box-shadow: 0 2px 7px rgb(45 49 39 / 5%);
+}
+
+.score-paper-header,
+.paper-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: #929187;
+  font-size: 9px;
+  letter-spacing: 0.7px;
+}
+
+.paper-separator {
+  padding: 0 4px;
+  color: #c5c7bf;
+}
+
+.score-paper-header {
+  padding: 0 4px 8px;
+  font-weight: 700;
+}
+
+.score-system {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.measure-sheet {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  overflow: visible;
+}
+
+.staff-paper { fill: #fffefa; }
+.staff-line { stroke: #62645e; stroke-width: 1.1; }
+.barline { stroke: #444940; stroke-width: 1.6; }
+
+.measure-number {
+  fill: #85867d;
+  font: 600 10px var(--font-body);
+}
+
+.percussion-clef rect { fill: #29342d; }
+
+.time-signature {
+  fill: #30352f;
+  font: 700 17px var(--font-body);
+  text-anchor: middle;
+}
+
+.placement-target {
+  fill: transparent;
+  cursor: crosshair;
+  pointer-events: all;
+}
+
+.measure-sheet.note-text-mode .placement-target { pointer-events: none; }
+.measure-sheet.selection-mode .placement-target { cursor: default; }
+
+.placement-target:hover,
+.placement-target:focus { fill: rgb(114 150 122 / 12%); }
+
+.placement-target.playhead { fill: rgb(114 150 122 / 20%); }
+
+.score-annotation {
+  fill: #25372a;
+  cursor: pointer;
+  font: 600 12px var(--font-body);
+}
+
+.score-annotation:hover,
+.score-annotation:focus {
+  fill: #416d4d;
+  outline: none;
+}
+
+.score-annotation.selected {
+  fill: #416d4d;
+  stroke: #9bb39c;
+  stroke-width: 3px;
+  paint-order: stroke;
+}
+
+.tie-arc {
+  fill: none;
+  stroke: #30342f;
+  stroke-linecap: round;
+  stroke-width: 1.3;
+  pointer-events: none;
+}
+
+.score-note {
+  cursor: pointer;
+  outline: none;
+}
+
+.measure-sheet.paste-pending .score-note { cursor: copy; }
+
+.score-tuplet {
+  pointer-events: none;
+}
+
+.tuplet-bracket {
+  fill: none;
+  stroke: #60775c;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.3;
+}
+
+.score-tuplet text,
+.score-beam text {
+  fill: #416d4d;
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.score-rest {
+  fill: #252b26;
+  font-family: "Segoe UI Symbol", "Noto Music", serif;
+  font-size: 30px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.score-note:hover .notehead,
+.score-note:focus .notehead {
+  stroke: #67856a;
+  stroke-width: 2;
+}
+
+.score-note.selected .notehead,
+.score-note.selected .notehead-cross {
+  stroke: #587a5d;
+  stroke-width: 2.5;
+}
+
+.selection-marquee {
+  fill: rgb(88 122 93 / 12%);
+  stroke: #587a5d;
+  stroke-dasharray: 4 3;
+  stroke-width: 1.2;
+  pointer-events: none;
+}
+
+.notehead {
+  fill: #252b26;
+  stroke: #252b26;
+  stroke-width: 1;
+}
+
+.note-hit-area {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.notehead-open {
+  fill: #fffefa;
+  stroke-width: 1.7;
+}
+
+.notehead-cross,
+.note-stem,
+.note-flag {
+  fill: none;
+  stroke: #252b26;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.note-stem { stroke-width: 1.4; }
+.note-flag { stroke-width: 1.8; }
+
+.score-beam {
+  pointer-events: none;
+}
+
+.note-beam {
+  fill: #252b26;
+}
+
+.paper-footer {
+  padding: 7px 4px 0;
+  border-top: 1px solid #eeece5;
+  letter-spacing: 0;
+}
+
+.sheet-footer {
+  min-height: 57px;
+  padding: 10px 21px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid #e7e3d9;
+}
+
+.measure-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #868a80;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.text-button {
+  padding: 5px 2px;
+  border: 0;
+  background: none;
+  color: #55765c;
+  cursor: pointer;
+  font: 650 10px var(--font-body);
+}
+
+.text-button:disabled {
+  color: #c2c4bd;
+  cursor: default;
+}
+
+@media (max-width: 760px) {
+  .score-scroll {
+    padding-right: 11px;
+    padding-left: 11px;
+  }
+
+  .sheet-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 11px 14px;
+  }
+
+  .score-paper { padding: 12px; }
+}

@@ -1,0 +1,146 @@
+<div class="app-shell" (window:keydown)="handleGlobalKeydown($event)">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Taktwerk Startseite">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>Taktwerk</span>
+    </a>
+    <div class="topbar-note"><span class="status-dot"></span> Dein Rhythmus. Dein Notenblatt.</div>
+    <button class="button button-quiet save-button" type="button" (click)="savePattern()">
+      <span aria-hidden="true">▣</span> Speichern
+    </button>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div>
+        <p class="eyebrow">SCHLAGZEUG-NOTATION</p>
+        <h1>Mach den Beat sichtbar.</h1>
+        <p class="intro-copy">
+          Setze deinen Rhythmus auf ein echtes Schlagzeug-Notensystem – Note für Note und Takt für Takt.
+        </p>
+      </div>
+      <div class="intro-stamp" aria-hidden="true">
+        <span>♩</span>
+        <span>♫</span>
+        <span>♬</span>
+      </div>
+    </section>
+
+    <section class="editor-card" aria-labelledby="editor-title">
+      <app-editor-toolbar
+        [numerator]="timeSignatureNumerator()"
+        [denominator]="timeSignatureDenominator()"
+        [denominators]="timeSignatureDenominators"
+        [subdivisionLabel]="subdivisionLabel()"
+        [tempo]="tempo()"
+        [isPlaying]="isPlaying()"
+        [canUndo]="undoAvailable()"
+        (numeratorChanged)="setTimeSignatureNumerator($event)"
+        (denominatorChanged)="setTimeSignatureDenominator($event)"
+        (tempoChanged)="setTempo($event)"
+        (undoRequested)="undoLastEdit()"
+        (playbackToggled)="togglePlayback()"
+      />
+
+      <app-editor-toolbox
+        [instruments]="instruments"
+        [selectedInstrumentId]="selectedInstrumentId()"
+        [noteValues]="noteValues"
+        [selectedNoteValue]="selectedNoteValue()"
+        [selectedRestValue]="selectedRestValue()"
+        [stepsPerMeasure]="stepsPerMeasure()"
+        [autoBeaming]="autoBeaming()"
+        [stemDirection]="stemDirection()"
+        [selectedNoteCount]="selectedNoteCount()"
+        [selectedObjectCount]="selectedObjectCount()"
+        [editingSelection]="editingSelection()"
+        [clipboardAvailable]="clipboardAvailable()"
+        [pastePending]="pastePending()"
+        [selectedNoteEdit]="selectedNoteEdit()"
+        [selectedAnnotationEdit]="selectedAnnotationEdit()"
+        [tupletsEnabled]="tupletsEnabled()"
+        [tupletCount]="tupletCount()"
+        [tupletInTimeOf]="tupletInTimeOf()"
+        [annotationInput]="annotationInput()"
+        [toolMode]="toolMode()"
+        [noteTextPosition]="noteTextPosition()"
+        (noteValueSelected)="selectNoteValue($event)"
+        (restValueSelected)="selectRestValue($event)"
+        (autoBeamingChanged)="setAutoBeaming($event)"
+        (stemDirectionChanged)="setStemDirection($event)"
+        (selectedStemDirectionChanged)="setSelectedStemDirection($event)"
+        (selectionCleared)="clearNoteSelection()"
+        (selectionEditToggled)="toggleSelectionEditing()"
+        (selectedObjectsDeleted)="deleteSelectedObjects()"
+        (selectedObjectsCopied)="copySelectedObjects()"
+        (pasteRequested)="requestPaste()"
+        (noteEditChanged)="editSelectedNote($event)"
+        (annotationTextChanged)="editSelectedAnnotationText($event)"
+        (tupletsEnabledChanged)="setTupletsEnabled($event)"
+        (tupletCountChanged)="setTupletCount($event)"
+        (tupletInTimeOfChanged)="setTupletInTimeOf($event)"
+        (annotationInputChanged)="setAnnotationInput($event)"
+        (toolModeSelected)="selectToolMode($event)"
+        (noteTextPositionSelected)="noteTextPosition.set($event)"
+        (instrumentSelected)="setSelectedInstrument($event)"
+      />
+
+      <app-score-sheet
+        [measures]="scoreMeasures()"
+        [measureSteps]="measureSteps()"
+        [staffLines]="staffLines"
+        [numerator]="timeSignatureNumerator()"
+        [denominator]="timeSignatureDenominator()"
+        [subdivisionLabel]="subdivisionLabel()"
+        [tempo]="tempo()"
+        [stepsPerMeasure]="stepsPerMeasure()"
+        [measureWidth]="measureWidth()"
+        [staffStartX]="staffStartX()"
+        [staffEndX]="staffEndX()"
+        [staffWidth]="staffWidth()"
+        [toolMode]="toolMode()"
+        [playingStep]="playingStep()"
+        [pastePending]="pastePending()"
+        [selectedNoteIds]="selectedNoteIds()"
+        [selectedAnnotationIds]="selectedAnnotationIds()"
+        (noteSelectionToggled)="toggleNoteSelection($event.noteId, $event.additive)"
+        (selectionChanged)="updateSelection(
+          $event.noteIds,
+          $event.annotationIds,
+          $event.additive
+        )"
+        (placementClicked)="handlePlacementClick(
+          $event.event,
+          $event.measureIndex,
+          $event.step,
+          $event.keyboardInstrument
+        )"
+        (noteClicked)="handleScoreNoteClick(
+          $event.event,
+          $event.note.instrumentId,
+          $event.note.sourceMeasure,
+          $event.note.sourceStep,
+          $event.note.eventId
+        )"
+        (annotationRemoved)="handleAnnotationClick(
+          $event.event,
+          $event.measureIndex,
+          $event.annotationId
+        )"
+        (addMeasureClicked)="addMeasure()"
+        (removeMeasureClicked)="removeMeasure()"
+      />
+    </section>
+
+    @if (message()) {
+      <p class="message" role="status">{{ message() }}</p>
+    }
+
+    <app-pattern-actions
+      (cleared)="clearPattern()"
+      (exported)="exportPattern()"
+      (pdfExported)="exportPdf($event)"
+    />
+  </main>
+  <footer class="footer">Taktwerk <span>·</span> Dein kreativer Rhythmusraum</footer>
+</div>

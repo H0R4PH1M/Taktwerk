@@ -1,0 +1,153 @@
+.editor-toolbar {
+  min-height: 82px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #e7e3d9;
+}
+
+.editor-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.heading-icon {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #edf3e9;
+  color: #56785d;
+}
+
+.clef-mark {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.clef-mark i {
+  width: 3px;
+  height: 20px;
+  border-radius: 1px;
+  background: #56785d;
+}
+
+.editor-heading h2 {
+  margin: 0 0 4px;
+  color: #2c3931;
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.editor-heading p {
+  margin: 0;
+  color: #92948c;
+  font-size: 11px;
+}
+
+.separator {
+  padding: 0 4px;
+  color: #c5c7bf;
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.signature-control,
+.tempo-control {
+  height: 38px;
+  padding: 0 9px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e5e4dc;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.signature-label {
+  color: #969a91;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.signature-control input,
+.signature-control select,
+.tempo-control input {
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: #38483d;
+  background: transparent;
+  font: 650 12px var(--font-body);
+}
+
+.signature-control input {
+  width: 28px;
+  text-align: right;
+}
+
+.signature-control select {
+  width: 39px;
+  cursor: pointer;
+}
+
+.signature-divider,
+.tempo-icon {
+  color: #78967a;
+  font-size: 15px;
+}
+
+.tempo-control input {
+  width: 38px;
+  text-align: right;
+}
+
+.bpm-label {
+  color: #969a91;
+  font-size: 10px;
+}
+
+.button-play {
+  min-width: 101px;
+  background: #436f50;
+  color: white;
+  box-shadow: 0 3px 7px rgb(48 91 60 / 13%);
+}
+
+@media (max-width: 760px) {
+  .editor-toolbar {
+    padding: 15px;
+    flex-wrap: wrap;
+  }
+
+  .editor-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .editor-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .editor-actions .button-play {
+    flex: 1;
+  }
+}

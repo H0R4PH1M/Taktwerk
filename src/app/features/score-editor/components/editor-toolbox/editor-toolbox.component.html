@@ -1,0 +1,449 @@
+<section class="toolbox" aria-label="Noten-Werkzeugleiste">
+  <div class="tool-mode-group" role="group" aria-label="Werkzeugmodus">
+    <p class="toolbox-label">WERKZEUG</p>
+    <div class="tool-mode-options">
+      <button
+        class="tool-mode-option"
+        type="button"
+        aria-label="Werkzeug Note"
+        [class.selected]="toolMode() === 'notes'"
+        [attr.aria-pressed]="toolMode() === 'notes'"
+        (click)="toolModeSelected.emit('notes')"
+      >
+        Note
+      </button>
+      <button
+        class="tool-mode-option"
+        type="button"
+        aria-label="Werkzeug Pause"
+        [class.selected]="toolMode() === 'rests'"
+        [attr.aria-pressed]="toolMode() === 'rests'"
+        (click)="toolModeSelected.emit('rests')"
+      >
+        Pause
+      </button>
+      <button
+        class="tool-mode-option"
+        type="button"
+        aria-label="Werkzeug Auswahl"
+        [class.selected]="toolMode() === 'select'"
+        [attr.aria-pressed]="toolMode() === 'select'"
+        (click)="toolModeSelected.emit('select')"
+      >
+        Auswahl
+      </button>
+      <button
+        class="tool-mode-option"
+        type="button"
+        aria-label="Werkzeug Text"
+        [class.selected]="toolMode() === 'freeText' || toolMode() === 'noteText'"
+        [attr.aria-pressed]="toolMode() === 'freeText' || toolMode() === 'noteText'"
+        (click)="toolModeSelected.emit('freeText')"
+      >
+        Text
+      </button>
+    </div>
+    <p class="tool-mode-help" aria-label="Hilfe zum Werkzeug" aria-live="polite">
+      {{ toolHelpText() }}
+    </p>
+  </div>
+  <div
+    class="toolbox-group instrument-guide"
+    role="group"
+    aria-label="Instrument wählen"
+  >
+    <p class="toolbox-label">INSTRUMENT</p>
+    <div class="instrument-legend">
+      @for (instrument of instruments(); track instrument.id) {
+        <button
+          class="instrument-guide-item"
+          type="button"
+          [class.selected]="selectedInstrumentId() === instrument.id"
+          [attr.aria-label]="'Instrument ' + instrument.name + ' auswählen'"
+          [attr.aria-pressed]="selectedInstrumentId() === instrument.id"
+          (click)="instrumentSelected.emit(instrument.id)"
+        >
+          <span class="tool-instrument-symbol" [class]="instrument.color">{{ instrument.note }}</span>
+          <span>{{ instrument.name }}</span>
+        </button>
+      }
+      <button
+        class="instrument-guide-item"
+        type="button"
+        [class.selected]="selectedInstrumentId() === null"
+        aria-label="Instrument per Klickhöhe wählen"
+        [attr.aria-pressed]="selectedInstrumentId() === null"
+        (click)="instrumentSelected.emit(null)"
+      >
+        Klickhöhe
+      </button>
+    </div>
+  </div>
+  <div class="toolbox-divider" aria-hidden="true"></div>
+  @if (toolMode() !== 'select') {
+    <div class="toolbox-group duration-tools">
+      @if (toolMode() === 'notes' || toolMode() === 'rests') {
+        @for (picker of durationPickers; track picker.kind) {
+          @if (toolMode() === picker.kind) {
+            <div class="duration-picker-group">
+              <p class="toolbox-label">{{ picker.label }}</p>
+              <div class="duration-picker" (click)="$event.stopPropagation()">
+          <button
+            class="duration-picker-trigger"
+            type="button"
+            [attr.aria-label]="picker.triggerLabel"
+            [attr.aria-controls]="picker.menuId"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="durationMenuKind() === picker.kind"
+            (click)="toggleDurationMenu(picker.kind)"
+          >
+            @if (picker.kind === 'rests') {
+              <span class="mini-rest" aria-hidden="true">{{ restSymbol(selectedValue(picker.kind)) }}</span>
+            } @else {
+              <span
+                class="mini-note"
+                [class.open-head]="selectedValue(picker.kind) <= 2"
+                aria-hidden="true"
+              >
+                @if (selectedValue(picker.kind) >= 4) {
+                  <i class="mini-stem"></i>
+                  @for (flag of noteFlags(selectedValue(picker.kind)); track flag) {
+                    <i class="mini-flag" [style.top.px]="8 + flag * 3"></i>
+                  }
+                }
+              </span>
+            }
+            <span>{{ selectedValueLabel(picker.kind) }}</span>
+            <span class="duration-arrow" aria-hidden="true"></span>
+          </button>
+          @if (durationMenuKind() === picker.kind) {
+            <div
+              class="duration-menu"
+              [id]="picker.menuId"
+              role="menu"
+              [attr.aria-label]="picker.label"
+            >
+              @for (duration of noteValues(); track duration.value) {
+                <button
+                  class="duration-option"
+                  type="button"
+                  role="menuitemradio"
+                  [class.selected]="selectedValue(picker.kind) === duration.value"
+                  [attr.aria-label]="picker.optionLabel + ' ' + duration.name"
+                  [attr.aria-checked]="selectedValue(picker.kind) === duration.value"
+                  (click)="chooseDuration(picker.kind, duration.value)"
+                >
+                  @if (picker.kind === 'rests') {
+                    <span class="mini-rest" aria-hidden="true">{{ restSymbol(duration.value) }}</span>
+                  } @else {
+                    <span class="mini-note" [class.open-head]="duration.value <= 2" aria-hidden="true">
+                      @if (duration.value >= 4) {
+                        <i class="mini-stem"></i>
+                        @for (flag of noteFlags(duration.value); track flag) {
+                          <i class="mini-flag" [style.top.px]="8 + flag * 3"></i>
+                        }
+                      }
+                    </span>
+                  }
+                  <span>{{ duration.label }}</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+        }
+      }
+      }
+      @if (toolMode() === 'freeText' || toolMode() === 'noteText') {
+        <div class="toolbox-group annotation-tools">
+          <p class="toolbox-label">PARTITURTEXT</p>
+          <div class="annotation-controls">
+            <input
+              aria-label="Partiturtext"
+              type="text"
+              maxlength="60"
+              placeholder="Text eingeben"
+              [value]="annotationInput()"
+              (input)="annotationInputChanged.emit($event)"
+            />
+            <button
+              class="text-mode-option"
+              type="button"
+              aria-label="Auswahlmodus"
+              (click)="toolModeSelected.emit('select')"
+            >
+              Auswahl
+            </button>
+            <button
+              class="text-mode-option"
+              type="button"
+              [class.selected]="toolMode() === 'noteText'"
+              aria-label="Textmodus An Note"
+              [attr.aria-pressed]="toolMode() === 'noteText'"
+              (click)="toolModeSelected.emit('noteText')"
+            >
+              An Note
+            </button>
+            <button
+              class="text-mode-option"
+              type="button"
+              [class.selected]="toolMode() === 'freeText'"
+              aria-label="Textmodus Freitext"
+              [attr.aria-pressed]="toolMode() === 'freeText'"
+              (click)="toolModeSelected.emit('freeText')"
+            >
+              Freitext platzieren
+            </button>
+            @if (toolMode() === 'noteText') {
+              <span class="position-label">Nächster Notentext:</span>
+              <button
+                class="text-mode-option"
+                type="button"
+                aria-label="Nächster Notentext über allen Noten"
+                [class.selected]="noteTextPosition() === 'above'"
+                [attr.aria-pressed]="noteTextPosition() === 'above'"
+                (click)="noteTextPositionSelected.emit('above')"
+              >
+                Über allen Noten
+              </button>
+              <button
+                class="text-mode-option"
+                type="button"
+                aria-label="Nächster Notentext unter allen Noten"
+                [class.selected]="noteTextPosition() === 'below'"
+                [attr.aria-pressed]="noteTextPosition() === 'below'"
+                (click)="noteTextPositionSelected.emit('below')"
+              >
+                Unter allen Noten
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+  <div class="toolbox-divider" aria-hidden="true"></div>
+  <details class="advanced-tools" aria-label="Erweiterte Werkzeuge">
+    <summary>Weitere Einstellungen</summary>
+    <div class="advanced-settings">
+      <div class="toolbox-group beam-tools" role="group" aria-label="Notenverbindung">
+        <p class="toolbox-label">NOTENVERBINDUNG</p>
+        <label class="auto-beam-toggle">
+          <input
+            type="checkbox"
+            aria-label="Noten automatisch verbinden"
+            [checked]="autoBeaming()"
+            (change)="autoBeamingChanged.emit($event)"
+          />
+          <span>Automatisch verbinden</span>
+        </label>
+        <label class="auto-beam-toggle">
+          <input
+            type="checkbox"
+            aria-label="Neue Noten nach unten"
+            [checked]="stemDirection() === 'down'"
+            (change)="stemDirectionChanged.emit($event)"
+          />
+          <span>Neue Noten nach unten</span>
+        </label>
+      </div>
+      <div class="toolbox-group tuplet-tools">
+        <p class="toolbox-label">NOTEN-TEILUNG</p>
+        <div class="tuplet-controls">
+          <button
+            class="text-mode-option"
+            type="button"
+            [class.selected]="tupletsEnabled()"
+            aria-label="Tuplets aktivieren"
+            [attr.aria-pressed]="tupletsEnabled()"
+            (click)="tupletsEnabledChanged.emit(!tupletsEnabled())"
+          >
+            Tuplets
+          </button>
+          @if (tupletsEnabled()) {
+            <label>
+              <span>Noten</span>
+              <input
+                aria-label="Tuplet Anzahl"
+                type="number"
+                min="2"
+                max="32"
+                step="1"
+                [value]="tupletCount()"
+                (change)="tupletCountChanged.emit($event)"
+              />
+            </label>
+            <span>im Wert von</span>
+            <label>
+              <span class="visually-hidden">Grundnotenwerte</span>
+              <input
+                aria-label="Tuplet Grundnotenwerte"
+                type="number"
+                min="1"
+                max="32"
+                step="1"
+                [value]="tupletInTimeOf()"
+                (change)="tupletInTimeOfChanged.emit($event)"
+              />
+            </label>
+            <span>ausgewählten Notenwerten</span>
+            <span class="tuplet-hint">
+              Erster Klick startet die Gruppe; weitere Klicks setzen sie fort. Die Gruppe muss in
+              einen Takt passen.
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+  </details>
+  @if (selectedObjectCount() > 0 || clipboardAvailable()) {
+    <div class="toolbox-divider" aria-hidden="true"></div>
+    <div class="toolbox-group selection-tools" role="group" aria-label="Auswahlaktionen">
+      <p class="toolbox-label">AUSWAHL · {{ selectedObjectCount() }} OBJEKTE</p>
+      <div class="selection-actions">
+      <button
+        class="text-mode-option"
+        type="button"
+        aria-label="Auswahl bearbeiten"
+        [disabled]="selectedObjectCount() !== 1"
+        [attr.aria-pressed]="editingSelection()"
+        (click)="selectionEditToggled.emit()"
+      >
+        Bearbeiten
+      </button>
+      <button
+        class="text-mode-option"
+        type="button"
+        aria-label="Auswahl löschen"
+        [disabled]="selectedObjectCount() === 0"
+        (click)="selectedObjectsDeleted.emit()"
+      >
+        Löschen
+      </button>
+      <button
+        class="text-mode-option"
+        type="button"
+        aria-label="Auswahl kopieren"
+        [disabled]="selectedObjectCount() === 0"
+        (click)="selectedObjectsCopied.emit()"
+      >
+        Kopieren
+      </button>
+      <button
+        class="text-mode-option"
+        type="button"
+        aria-label="Einfügen"
+        [disabled]="!clipboardAvailable()"
+        [class.selected]="pastePending()"
+        [attr.aria-pressed]="pastePending()"
+        (click)="pasteRequested.emit()"
+      >
+        {{ pastePending() ? 'Einfügen: Ziel wählen' : 'Einfügen' }}
+      </button>
+      <button
+        class="text-button"
+        type="button"
+        [disabled]="selectedObjectCount() === 0"
+        (click)="selectionCleared.emit()"
+      >
+        Auswahl aufheben
+      </button>
+      </div>
+      @if (selectedNoteCount() > 0) {
+        <div class="selection-direction-controls" role="group" aria-label="Richtung der Notenauswahl">
+          <span class="selection-count" aria-live="polite">
+            {{ selectedNoteCount() }} {{ selectedNoteCount() === 1 ? 'Note' : 'Noten' }} ausgewählt
+          </span>
+          <button
+            class="text-mode-option"
+            type="button"
+            aria-label="Auswahl nach oben ausrichten"
+            (click)="selectedStemDirectionChanged.emit('up')"
+          >
+            Nach oben
+          </button>
+          <button
+            class="text-mode-option"
+            type="button"
+            aria-label="Auswahl nach unten ausrichten"
+            (click)="selectedStemDirectionChanged.emit('down')"
+          >
+            Nach unten
+          </button>
+        </div>
+      }
+      <span class="selection-hint">
+        Strg-Klick wählt weitere Objekte; Ziehen im Notenblatt wählt einen Bereich.
+      </span>
+    @if (editingSelection() && selectedNoteEdit(); as note) {
+      <div class="selection-editor" role="group" aria-label="Note bearbeiten">
+        @if (note.isTuplet) {
+          <span class="selection-edit-hint">Tuplet-Noten können hier nicht einzeln versetzt oder umgewertet werden.</span>
+        } @else {
+          <label>
+            <span>Instrument</span>
+            <select
+              aria-label="Instrument der ausgewählten Note"
+              [value]="note.instrumentId"
+              (change)="emitNoteEdit('instrumentId', $event)"
+            >
+              @for (instrument of instruments(); track instrument.id) {
+                <option [value]="instrument.id">{{ instrument.name }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>Notenwert</span>
+            <select
+              aria-label="Notenwert der ausgewählten Note"
+              [value]="note.duration"
+              (change)="emitNoteEdit('duration', $event)"
+            >
+              @for (duration of noteValues(); track duration.value) {
+                <option [value]="duration.value">{{ duration.label }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>Takt</span>
+            <input
+              aria-label="Takt der ausgewählten Note"
+              type="number"
+              min="1"
+              max="4"
+              step="1"
+              [value]="note.measureIndex + 1"
+              (change)="emitNoteEdit('measureIndex', $event)"
+            />
+          </label>
+          <label>
+            <span>Schritt</span>
+            <input
+              aria-label="Schritt der ausgewählten Note"
+              type="number"
+              min="1"
+              [max]="stepsPerMeasure()"
+              step="1"
+              [value]="note.start + 1"
+              (change)="emitNoteEdit('start', $event)"
+            />
+          </label>
+        }
+      </div>
+    }
+    @if (editingSelection() && selectedAnnotationEdit(); as annotation) {
+      <label class="selection-editor annotation-editor">
+        <span>Text bearbeiten</span>
+        <input
+          aria-label="Ausgewählten Text bearbeiten"
+          type="text"
+          maxlength="60"
+          [value]="annotation.text"
+          (input)="emitAnnotationText($event)"
+        />
+      </label>
+    }
+    </div>
+  }
+</section>

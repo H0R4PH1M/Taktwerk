@@ -1,0 +1,80 @@
+<section class="export-card">
+  <div>
+    <h3>Dein Beat, zum Mitnehmen</h3>
+    <p>Speichere dein Pattern im Browser oder exportiere es als JSON-Datei oder PDF.</p>
+  </div>
+  <div class="export-actions">
+    <button class="button button-quiet clear-button" type="button" (click)="cleared.emit()">
+      Leeren
+    </button>
+    <button
+      class="button button-quiet"
+      type="button"
+      aria-label="JSON exportieren"
+      (click)="exported.emit()"
+    >
+      JSON exportieren
+    </button>
+    <button
+      class="button button-export"
+      type="button"
+      aria-label="PDF Einstellungen"
+      (click)="openPdfSettings()"
+    >
+      PDF exportieren <span aria-hidden="true">↗</span>
+    </button>
+  </div>
+</section>
+
+@if (pdfSettingsOpen()) {
+  <div class="pdf-dialog-backdrop" (click)="closePdfSettings()">
+    <section
+      class="pdf-settings-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pdf-settings-title"
+      (click)="$event.stopPropagation()"
+    >
+      <h2 id="pdf-settings-title">PDF-Export einstellen</h2>
+      <form (submit)="requestPdfExport($event)">
+        <label>
+          <span>Titel</span>
+          <input
+            aria-label="PDF Titel"
+            type="text"
+            maxlength="80"
+            required
+            autofocus
+            [value]="pdfTitle()"
+            (input)="setPdfTitle($event)"
+          />
+        </label>
+        <label>
+          <span>Takte pro Zeile</span>
+          <select
+            aria-label="Takte pro Zeile"
+            [value]="measuresPerRow()"
+            (change)="setMeasuresPerRow($event)"
+          >
+            @for (count of pdfMeasuresPerRowOptions; track count) {
+              <option [value]="count" [selected]="measuresPerRow() === count">
+                {{ count }}
+              </option>
+            }
+          </select>
+        </label>
+        @if (validationMessage()) {
+          <p class="pdf-validation-message" role="alert">{{ validationMessage() }}</p>
+        }
+        <div class="pdf-dialog-actions">
+          <button class="button button-quiet" type="button" (click)="closePdfSettings()">
+            Abbrechen
+          </button>
+          <button class="button button-export" type="submit" aria-label="PDF herunterladen">
+            PDF herunterladen
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

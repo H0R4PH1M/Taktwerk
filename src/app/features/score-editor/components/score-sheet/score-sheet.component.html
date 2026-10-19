@@ -1,0 +1,293 @@
+<div class="score-scroll">
+  <div class="score-paper">
+    <div class="score-paper-header">
+      <span>TAKTWERK <span class="paper-separator">/</span> SCHLAGZEUG-PARTITUR</span>
+      <span>
+        {{ numerator() }}/{{ denominator() }}
+        <span class="paper-separator">·</span> {{ subdivisionLabel() }}
+        <span class="paper-separator">·</span> {{ tempo() }} BPM
+      </span>
+    </div>
+
+    <div
+      class="score-system"
+      aria-label="Schlagzeug-Notensystem"
+    >
+      @for (measure of measures(); track measure.index) {
+        <svg
+          class="measure-sheet"
+          [attr.width]="measureWidth()"
+          [attr.height]="scoreSheetHeight"
+          [attr.viewBox]="'0 0 ' + measureWidth() + ' ' + scoreSheetHeight"
+          [class.note-text-mode]="toolMode() === 'noteText'"
+          [class.selection-mode]="toolMode() === 'select'"
+          [class.paste-pending]="pastePending()"
+          role="group"
+          [attr.aria-label]="'Takt ' + (measure.index + 1)"
+          (pointerdown)="startSelection($event, measure.index)"
+          (pointermove)="moveSelection($event)"
+          (pointerup)="endSelection($event)"
+          (pointercancel)="cancelSelection($event)"
+        >
+          <rect class="staff-paper" width="100%" [attr.height]="scoreSheetHeight"></rect>
+          <g
+            class="score-content"
+            [attr.transform]="'translate(0 ' + scoreContentOffsetY + ')'"
+          >
+          <text class="measure-number" x="112" y="27">{{ measure.index + 1 }}</text>
+          <g class="percussion-clef" role="img" aria-label="Schlagzeugschlüssel">
+            <rect x="27" y="64" width="4" height="24" rx="1"></rect>
+            <rect x="36" y="64" width="4" height="24" rx="1"></rect>
+          </g>
+          @if (measure.index === 0) {
+            <text class="time-signature" x="78" y="72">{{ numerator() }}</text>
+            <text class="time-signature" x="78" y="96">{{ denominator() }}</text>
+          }
+          @for (line of staffLines(); track line) {
+            <line
+              class="staff-line"
+              [attr.x1]="staffStartX()"
+              [attr.x2]="staffEndX()"
+              [attr.y1]="line"
+              [attr.y2]="line"
+            ></line>
+          }
+          <line
+            class="barline"
+            [attr.x1]="staffEndX()"
+            [attr.x2]="staffEndX()"
+            y1="51"
+            y2="101"
+          ></line>
+
+          @for (step of measureSteps(); track step) {
+            <rect
+              class="placement-target"
+              [class.playhead]="playingStep() === measure.index * stepsPerMeasure() + step"
+              [attr.x]="staffStartX() + (step / stepsPerMeasure()) * staffWidth()"
+              y="33"
+              [attr.width]="staffWidth() / stepsPerMeasure() + 0.5"
+              height="91"
+              [attr.data-step]="step"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="(toolMode() === 'rests' ? 'Pause setzen' : 'Note setzen') + ', Takt ' + (measure.index + 1) + ', Schritt ' + (step + 1) + '. Tastatur-Instrument: ' + keyboardInstrumentName()"
+              (click)="handlePlacementClick($event, measure.index, step)"
+              (keydown)="handlePlacementKeydown($event, measure.index, step)"
+            ></rect>
+          }
+
+          @for (note of measure.notes; track note.id) {
+            @if (note.tieArcIn) {
+              <path
+                class="tie-arc tie-arc-in"
+                [attr.data-instrument]="note.instrumentId"
+                [attr.d]="note.tieArcIn"
+              ></path>
+            }
+            @if (note.tieArcOut) {
+              <path
+                class="tie-arc tie-arc-out"
+                [attr.data-instrument]="note.instrumentId"
+                [attr.d]="note.tieArcOut"
+              ></path>
+            }
+            <g
+              class="score-note"
+              [class.selected]="selectedNoteIds().includes(note.eventId)"
+              [attr.data-event-id]="note.eventId"
+              [attr.data-instrument]="note.instrumentId"
+              [attr.data-duration]="note.duration"
+              [attr.data-step]="note.measureStep"
+              [attr.data-beam-group-id]="note.beamGroupId ?? null"
+              [attr.data-beam-stem-offset]="note.beamStemOffset ?? null"
+              [attr.data-tuplet-id]="note.tupletId ?? null"
+              [attr.data-tuplet-index]="note.tupletIndex ?? null"
+              [attr.transform]="'translate(' + note.x + ' ' + note.y + ')'"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="
+                note.label +
+                (toolMode() === 'select'
+                  ? ', anklicken zum Auswählen'
+                  : ', anklicken zum Entfernen')
+              "
+              (click)="handleNoteClick($event, note)"
+              (keydown.enter)="handleNoteClick($event, note)"
+              (keydown.space)="handleNoteClick($event, note)"
+            >
+              <circle class="note-hit-area" cx="0" cy="0" r="10"></circle>
+              @if (
+                note.instrumentId === 'crash' ||
+                note.instrumentId === 'closedHat' ||
+                note.instrumentId === 'openHat'
+              ) {
+                <path class="notehead-cross" d="M -5 -5 L 5 5 M 5 -5 L -5 5"></path>
+              } @else {
+                <ellipse
+                  class="notehead"
+                  [class.notehead-open]="!note.filledHead"
+                  cx="0"
+                  cy="0"
+                  rx="6"
+                  ry="4"
+                  transform="rotate(-22)"
+                ></ellipse>
+              }
+              @if (note.stemmed) {
+                <line
+                  class="note-stem"
+                  [attr.x1]="note.stemDirection === 'down' ? -5 : 5"
+                  y1="0"
+                  [attr.x2]="note.stemDirection === 'down' ? -5 : 5"
+                  [attr.y2]="
+                    note.beamGroupId
+                      ? beamStemEnd(note.flagCount, note.beamStemOffset ?? 0, note.stemDirection)
+                      : note.stemDirection === 'down'
+                        ? 34
+                        : -34
+                  "
+                ></line>
+                @if (!note.beamGroupId) {
+                  @for (flag of noteFlags(note.duration); track flag) {
+                    <path
+                      class="note-flag"
+                      [attr.d]="
+                        note.stemDirection === 'down'
+                          ? 'M -5 ' + (34 - flag * 5) + ' Q -17 ' + (32 - flag * 5) + ' -9 ' + (25 - flag * 5)
+                          : 'M 5 ' + (-34 + flag * 5) + ' Q 17 ' + (-32 + flag * 5) + ' 9 ' + (-25 + flag * 5)
+                      "
+                    ></path>
+                  }
+                }
+              }
+            </g>
+          }
+
+          @for (beam of measure.beams; track beam.id) {
+            <g
+              class="score-beam"
+              [attr.data-beam-id]="beam.id"
+              [attr.data-instrument]="beam.instrumentId"
+              [attr.data-direction]="beam.direction"
+              [attr.data-levels]="beam.levels"
+              [attr.data-y]="beam.y"
+              [attr.data-tuplet-id]="beam.tupletId ?? null"
+              [attr.data-tuplet-index-start]="beam.tupletIndexStart ?? null"
+              aria-hidden="true"
+            >
+              @for (level of beamLevels(beam.levels); track level) {
+                <path class="note-beam" [attr.d]="beamPath(beam, level)"></path>
+              }
+              @if (
+                beam.tupletIndexStart === 0 &&
+                beam.tupletCount !== undefined &&
+                beam.tupletInTimeOf !== undefined
+              ) {
+                <text
+                  class="tuplet-beam-label"
+                  [attr.x]="(beam.xStart + beam.xEnd) / 2"
+                  [attr.y]="beam.y + (beam.direction === 'down' ? 12 : -4)"
+                >
+                  {{ tupletLabel(beam.tupletCount, beam.tupletInTimeOf) }}
+                </text>
+              }
+            </g>
+          }
+
+          @for (rest of measure.rests; track rest.id) {
+            <g
+              class="score-rest"
+              [attr.data-rest-id]="rest.eventId"
+              [attr.data-instrument]="rest.instrumentId"
+              [attr.data-duration]="rest.duration"
+              [attr.data-step]="rest.measureStep"
+              [attr.transform]="'translate(' + rest.x + ' ' + rest.y + ')'"
+              role="img"
+              [attr.aria-label]="rest.label"
+              pointer-events="none"
+            >
+              <text [textContent]="restSymbol(rest.duration)"></text>
+            </g>
+          }
+
+          @for (annotation of measure.annotations; track annotation.id) {
+            <text
+              class="score-annotation"
+              [attr.data-annotation-id]="annotation.id"
+              [attr.data-kind]="annotation.kind"
+              [attr.data-step]="annotation.step"
+              [attr.data-note-id]="annotation.noteId ?? null"
+              [attr.x]="annotation.x"
+              [attr.y]="annotation.y"
+              [attr.text-anchor]="annotation.kind === 'note' ? 'middle' : 'start'"
+              role="button"
+              tabindex="0"
+              [class.selected]="selectedAnnotationIds().includes(annotation.id)"
+              [attr.aria-label]="'Anmerkung ' + annotation.text + ', anklicken zum Auswählen oder Entfernen'"
+              (click)="annotationRemoved.emit({ event: $event, measureIndex: measure.index, annotationId: annotation.id })"
+              (keydown.enter)="annotationRemoved.emit({ event: $event, measureIndex: measure.index, annotationId: annotation.id })"
+              (keydown.space)="annotationRemoved.emit({ event: $event, measureIndex: measure.index, annotationId: annotation.id })"
+              [textContent]="annotation.text"
+            ></text>
+          }
+          </g>
+          @if (selectionMarquee()?.measureIndex === measure.index) {
+            <rect
+              class="selection-marquee"
+              [attr.x]="selectionMarquee()?.x"
+              [attr.y]="selectionMarquee()?.y"
+              [attr.width]="selectionMarquee()?.width"
+              [attr.height]="selectionMarquee()?.height"
+              aria-hidden="true"
+            ></rect>
+          }
+          @for (tuplet of measure.tuplets; track tuplet.id) {
+            <g
+              class="score-tuplet"
+              [attr.data-tuplet-id]="tuplet.id"
+              role="img"
+              [attr.aria-label]="tuplet.count + ' Noten im Wert von ' + tuplet.inTimeOf + ' Grundnoten'"
+            >
+              @if (!hasTupletBeam(measure.beams, tuplet.id)) {
+                <path class="tuplet-bracket" [attr.d]="tupletBracketPath(tuplet)"></path>
+                <text
+                  [attr.x]="(tuplet.xStart + tuplet.xEnd) / 2"
+                  [attr.y]="tupletLabelTextY"
+                >
+                  {{ tupletLabel(tuplet.count, tuplet.inTimeOf) }}
+                </text>
+              }
+            </g>
+          }
+        </svg>
+      }
+    </div>
+    <div class="paper-footer">
+      <span>Schlagzeugschlüssel <span class="paper-separator">·</span> X-Notenkopf = Becken und Hi-Hat</span>
+      <span>{{ measures().length }} {{ measures().length === 1 ? 'Takt' : 'Takte' }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-footer">
+  <div class="measure-controls">
+    <button
+      class="text-button"
+      type="button"
+      (click)="removeMeasureClicked.emit()"
+      [disabled]="measures().length <= 1"
+    >
+      − Takt
+    </button>
+    <span>{{ measures().length }} {{ measures().length === 1 ? 'Takt' : 'Takte' }}</span>
+    <button
+      class="text-button"
+      type="button"
+      (click)="addMeasureClicked.emit()"
+      [disabled]="measures().length >= 4"
+    >
+      + Takt
+    </button>
+  </div>
+</div>

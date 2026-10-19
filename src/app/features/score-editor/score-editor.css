@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+.editor-card {
+  overflow: hidden;
+  border: 1px solid #e1ded4;
+  border-radius: 12px;
+  background: #fffefa;
+  box-shadow: 0 8px 26px rgb(39 51 42 / 4%);
+}
+
+.message {
+  margin: 10px 0 -7px;
+  color: #5b755f;
+  font-size: 11px;
+}
+
+.footer {
+  padding: 24px 20px 20px;
+  color: #a4a69d;
+  font-size: 10px;
+  text-align: center;
+}
+
+.footer span {
+  padding: 0 4px;
+  color: #c3c5bc;
+}

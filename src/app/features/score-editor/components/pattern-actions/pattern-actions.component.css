@@ -1,0 +1,119 @@
+.export-card {
+  min-height: 80px;
+  margin-top: 16px;
+  padding: 15px 19px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border: 1px solid #e7e5df;
+  border-radius: 10px;
+  background: #fffefa;
+}
+
+.export-card h3 {
+  margin: 0 0 5px;
+  color: #3a483d;
+  font-family: var(--font-display);
+  font-size: 12px;
+}
+
+.export-card p {
+  margin: 0;
+  color: #858980;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.export-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button-export {
+  background: #e9f0e5;
+  color: #456b4e;
+}
+
+.button-export:hover { background: #dfeadb; }
+.clear-button { min-width: 61px; }
+
+.pdf-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  padding: 20px;
+  display: grid;
+  place-items: center;
+  background: rgb(35 43 36 / 60%);
+}
+
+.pdf-settings-dialog {
+  width: min(420px, 100%);
+  padding: 22px;
+  border: 1px solid #e2e4dc;
+  border-radius: 12px;
+  background: #fffefa;
+  box-shadow: 0 16px 50px rgb(0 0 0 / 20%);
+}
+
+.pdf-settings-dialog h2 {
+  margin: 0 0 18px;
+  color: #3a483d;
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.pdf-settings-dialog form,
+.pdf-settings-dialog label {
+  display: grid;
+  gap: 7px;
+}
+
+.pdf-settings-dialog form {
+  gap: 14px;
+}
+
+.pdf-settings-dialog label {
+  color: #59645a;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.pdf-settings-dialog input,
+.pdf-settings-dialog select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid #d9ddd3;
+  border-radius: 6px;
+  background: #fff;
+  color: #344139;
+  font: 500 12px var(--font-body);
+}
+
+.pdf-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 4px;
+}
+
+.pdf-validation-message {
+  margin: 0;
+  color: #a13d31;
+  font-size: 11px;
+}
+
+@media (max-width: 480px) {
+  .export-card {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .export-actions { width: 100%; }
+  .export-actions button:last-child { flex: 1 1 auto; }
+}

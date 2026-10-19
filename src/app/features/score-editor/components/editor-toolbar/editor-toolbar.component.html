@@ -1,0 +1,59 @@
+<div class="editor-toolbar">
+  <div class="editor-heading">
+    <div class="heading-icon" aria-hidden="true">
+      <span class="clef-mark"><i></i><i></i></span>
+    </div>
+    <div>
+      <h2 id="editor-title">Partitur</h2>
+      <p>
+        {{ numerator() }}/{{ denominator() }}-Takt
+        <span class="separator">·</span> Raster bis {{ subdivisionLabel() }}
+      </p>
+    </div>
+  </div>
+  <div class="editor-actions">
+    <label class="signature-control">
+      <span class="signature-label">TAKTART</span>
+      <input
+        aria-label="Taktart-Zähler"
+        type="number"
+        min="1"
+        max="32"
+        step="1"
+        [value]="numerator()"
+        (change)="numeratorChanged.emit($event)"
+      />
+      <span class="signature-divider" aria-hidden="true">/</span>
+      <select aria-label="Taktart-Nenner" (change)="denominatorChanged.emit($event)">
+        @for (value of denominators(); track value) {
+          <option [value]="value" [selected]="value === denominator()">{{ value }}</option>
+        }
+      </select>
+    </label>
+    <label class="tempo-control">
+      <span class="tempo-icon" aria-hidden="true">♩</span>
+      <input
+        aria-label="Tempo in Schlägen pro Minute"
+        type="number"
+        min="40"
+        max="240"
+        [value]="tempo()"
+        (change)="tempoChanged.emit($event)"
+      />
+      <span class="bpm-label">BPM</span>
+    </label>
+    <button
+      class="button button-quiet"
+      type="button"
+      aria-label="Rückgängig"
+      [disabled]="!canUndo()"
+      (click)="undoRequested.emit()"
+    >
+      Rückgängig
+    </button>
+    <button class="button button-play" type="button" (click)="playbackToggled.emit()">
+      <span aria-hidden="true">{{ isPlaying() ? '■' : '▶' }}</span>
+      {{ isPlaying() ? 'Stoppen' : 'Anhören' }}
+    </button>
+  </div>
+</div>
