@@ -24,6 +24,8 @@ interface SavedPatternMetadata {
   annotations?: unknown;
 }
 
+const TOM_INSTRUMENT_IDS: readonly DrumId[] = ['tom1', 'tom2', 'floorTom'];
+
 @Injectable({ providedIn: 'root' })
 export class PatternStorageService {
   private readonly storageKey = 'taktwerk-pattern-v1';
@@ -53,7 +55,7 @@ export class PatternStorageService {
 
     let pattern: Pattern;
     if (this.isCurrentPattern(metadata, instruments, noteValues)) {
-      pattern = metadata.pattern;
+      pattern = this.addMissingTomTracks(metadata.pattern, metadata.measures) as Pattern;
     } else if (this.isLegacyPattern(metadata, instruments)) {
       pattern = this.migrateLegacyPattern(metadata, instruments, createNoteId);
     } else {
@@ -65,7 +67,13 @@ export class PatternStorageService {
     const rests =
       metadata.rests === undefined
         ? this.createEmptyRests(metadata.measures, instruments)
-        : this.readRests(metadata.rests, metadata.measures, stepsPerMeasure, instruments, noteValues);
+        : this.readRests(
+            this.addMissingTomTracks(metadata.rests, metadata.measures),
+            metadata.measures,
+            stepsPerMeasure,
+            instruments,
+            noteValues,
+          );
     if (!rests) {
       throw new Error('Ungültiges Pausenformat');
     }
@@ -228,6 +236,9 @@ export class PatternStorageService {
     >();
     const validTracks = instruments.every((instrument) => {
       const track = (saved.pattern as Record<string, unknown>)[instrument.id];
+      if (track === undefined && TOM_INSTRUMENT_IDS.includes(instrument.id)) {
+        return true;
+      }
       return (
         Array.isArray(track) &&
         track.length === saved.measures &&
@@ -330,6 +341,9 @@ export class PatternStorageService {
       (saved.numerator * Math.max(16, saved.denominator)) / saved.denominator;
     return instruments.every((instrument) => {
       const track = (saved.pattern as Record<string, unknown>)[instrument.id];
+      if (track === undefined && TOM_INSTRUMENT_IDS.includes(instrument.id)) {
+        return true;
+      }
       return (
         Array.isArray(track) &&
         track.length === saved.measures &&
@@ -400,13 +414,30 @@ export class PatternStorageService {
     const scale = Math.max(64, saved.denominator) / legacyTicksPerWholeNote;
     const migrated = this.createEmptyPattern(saved.measures, instruments);
     for (const instrument of instruments) {
-      migrated[instrument.id] = saved.pattern[instrument.id].map((measure) =>
+      const savedTrack = saved.pattern[instrument.id];
+      if (!savedTrack) {
+        continue;
+      }
+      migrated[instrument.id] = savedTrack.map((measure) =>
         measure.flatMap((isActive, step) =>
           isActive ? [{ id: createNoteId(), start: step * scale, duration: 16 as NoteValue }] : [],
         ),
       );
     }
     return migrated;
+  }
+
+  private addMissingTomTracks(value: unknown, measures: number): unknown {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return value;
+    }
+    const tracks = { ...(value as Record<string, unknown>) };
+    for (const instrumentId of TOM_INSTRUMENT_IDS) {
+      if (tracks[instrumentId] === undefined) {
+        tracks[instrumentId] = Array.from({ length: measures }, () => []);
+      }
+    }
+    return tracks;
   }
 
   private createEmptyPattern(

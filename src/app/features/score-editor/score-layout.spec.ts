@@ -9,6 +9,9 @@ function createPattern(): Pattern {
     closedHat: [[]],
     openHat: [[]],
     crash: [[]],
+    tom1: [[]],
+    tom2: [[]],
+    floorTom: [[]],
   };
 }
 

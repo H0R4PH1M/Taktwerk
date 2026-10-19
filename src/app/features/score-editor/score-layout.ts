@@ -352,8 +352,14 @@ function instrumentY(instrumentId: DrumInstrument['id']): number {
       return 44;
     case 'closedHat':
       return 52;
+    case 'tom1':
+      return 64;
     case 'snare':
       return 76;
+    case 'tom2':
+      return 88;
+    case 'floorTom':
+      return 100;
     case 'kick':
       return 112;
   }

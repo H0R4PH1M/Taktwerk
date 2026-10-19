@@ -4,7 +4,10 @@ export const DRUM_INSTRUMENTS: readonly DrumInstrument[] = [
   { id: 'crash', name: 'Crash-Becken', abbreviation: 'CR', note: '×', color: 'coral' },
   { id: 'openHat', name: 'Hi-Hat offen', abbreviation: 'OH', note: '○', color: 'gold' },
   { id: 'closedHat', name: 'Hi-Hat geschlossen', abbreviation: 'HH', note: '×', color: 'gold' },
+  { id: 'tom1', name: 'Erstes Tom', abbreviation: 'T1', note: '●', color: 'blue' },
   { id: 'snare', name: 'Snare', abbreviation: 'SD', note: '●', color: 'blue' },
+  { id: 'tom2', name: 'Zweites Tom', abbreviation: 'T2', note: '●', color: 'violet' },
+  { id: 'floorTom', name: 'Floortom', abbreviation: 'FT', note: '●', color: 'coral' },
   { id: 'kick', name: 'Bass Drum', abbreviation: 'BD', note: '●', color: 'violet' },
 ];
 

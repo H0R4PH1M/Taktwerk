@@ -87,73 +87,91 @@
           @if (toolMode() === picker.kind) {
             <div class="duration-picker-group">
               <p class="toolbox-label">{{ picker.label }}</p>
-              <div class="duration-picker" (click)="$event.stopPropagation()">
-          <button
-            class="duration-picker-trigger"
-            type="button"
-            [attr.aria-label]="picker.triggerLabel"
-            [attr.aria-controls]="picker.menuId"
-            aria-haspopup="menu"
-            [attr.aria-expanded]="durationMenuKind() === picker.kind"
-            (click)="toggleDurationMenu(picker.kind)"
-          >
-            @if (picker.kind === 'rests') {
-              <span class="mini-rest" aria-hidden="true">{{ restSymbol(selectedValue(picker.kind)) }}</span>
-            } @else {
-              <span
-                class="mini-note"
-                [class.open-head]="selectedValue(picker.kind) <= 2"
-                aria-hidden="true"
-              >
-                @if (selectedValue(picker.kind) >= 4) {
-                  <i class="mini-stem"></i>
-                  @for (flag of noteFlags(selectedValue(picker.kind)); track flag) {
-                    <i class="mini-flag" [style.top.px]="8 + flag * 3"></i>
-                  }
-                }
-              </span>
-            }
-            <span>{{ selectedValueLabel(picker.kind) }}</span>
-            <span class="duration-arrow" aria-hidden="true"></span>
-          </button>
-          @if (durationMenuKind() === picker.kind) {
-            <div
-              class="duration-menu"
-              [id]="picker.menuId"
-              role="menu"
-              [attr.aria-label]="picker.label"
-            >
-              @for (duration of noteValues(); track duration.value) {
-                <button
-                  class="duration-option"
-                  type="button"
-                  role="menuitemradio"
-                  [class.selected]="selectedValue(picker.kind) === duration.value"
-                  [attr.aria-label]="picker.optionLabel + ' ' + duration.name"
-                  [attr.aria-checked]="selectedValue(picker.kind) === duration.value"
-                  (click)="chooseDuration(picker.kind, duration.value)"
-                >
-                  @if (picker.kind === 'rests') {
-                    <span class="mini-rest" aria-hidden="true">{{ restSymbol(duration.value) }}</span>
-                  } @else {
-                    <span class="mini-note" [class.open-head]="duration.value <= 2" aria-hidden="true">
-                      @if (duration.value >= 4) {
-                        <i class="mini-stem"></i>
-                        @for (flag of noteFlags(duration.value); track flag) {
-                          <i class="mini-flag" [style.top.px]="8 + flag * 3"></i>
+              <div class="duration-picker-controls">
+                <div class="duration-picker" (click)="$event.stopPropagation()">
+                  <button
+                    class="duration-picker-trigger"
+                    type="button"
+                    [attr.aria-label]="picker.triggerLabel"
+                    [attr.aria-controls]="picker.menuId"
+                    aria-haspopup="menu"
+                    [attr.aria-expanded]="durationMenuKind() === picker.kind"
+                    (click)="toggleDurationMenu(picker.kind)"
+                  >
+                    @if (picker.kind === 'rests') {
+                      <span class="mini-rest" aria-hidden="true">{{ restSymbol(selectedValue(picker.kind)) }}</span>
+                    } @else {
+                      <span
+                        class="mini-note"
+                        [class.open-head]="selectedValue(picker.kind) <= 2"
+                        aria-hidden="true"
+                      >
+                        @if (selectedValue(picker.kind) >= 4) {
+                          <i class="mini-stem"></i>
+                          @for (flag of noteFlags(selectedValue(picker.kind)); track flag) {
+                            <i class="mini-flag" [style.top.px]="8 + flag * 3"></i>
+                          }
                         }
+                      </span>
+                    }
+                    <span>{{ selectedValueLabel(picker.kind) }}</span>
+                    <span class="duration-arrow" aria-hidden="true"></span>
+                  </button>
+                  @if (durationMenuKind() === picker.kind) {
+                    <div
+                      class="duration-menu"
+                      [id]="picker.menuId"
+                      role="menu"
+                      [attr.aria-label]="picker.label"
+                    >
+                      @for (duration of noteValues(); track duration.value) {
+                        <button
+                          class="duration-option"
+                          type="button"
+                          role="menuitemradio"
+                          [class.selected]="selectedValue(picker.kind) === duration.value"
+                          [attr.aria-label]="picker.optionLabel + ' ' + duration.name"
+                          [attr.aria-checked]="selectedValue(picker.kind) === duration.value"
+                          (click)="chooseDuration(picker.kind, duration.value)"
+                        >
+                          @if (picker.kind === 'rests') {
+                            <span class="mini-rest" aria-hidden="true">{{ restSymbol(duration.value) }}</span>
+                          } @else {
+                            <span class="mini-note" [class.open-head]="duration.value <= 2" aria-hidden="true">
+                              @if (duration.value >= 4) {
+                                <i class="mini-stem"></i>
+                                @for (flag of noteFlags(duration.value); track flag) {
+                                  <i class="mini-flag" [style.top.px]="8 + flag * 3"></i>
+                                }
+                              }
+                            </span>
+                          }
+                          <span>{{ duration.label }}</span>
+                        </button>
                       }
-                    </span>
+                    </div>
                   }
-                  <span>{{ duration.label }}</span>
-                </button>
-              }
+                </div>
+                @if (picker.kind === 'notes') {
+                  <button
+                    class="button button-quiet fill-measure-button"
+                    type="button"
+                    [class.selected]="fillMeasurePending()"
+                    [disabled]="selectedInstrumentId() === null"
+                    [attr.aria-label]="
+                      fillMeasurePending() ? 'Taktfüllung aktiv, Takt wählen' : 'Takt füllen aktivieren'
+                    "
+                    [attr.aria-pressed]="fillMeasurePending()"
+                    (click)="fillMeasureToggled.emit()"
+                  >
+                    <span aria-hidden="true">▦</span>
+                    {{ fillMeasurePending() ? 'Takt wählen' : 'Takt füllen' }}
+                  </button>
+                }
+              </div>
             </div>
           }
-        </div>
-      </div>
         }
-      }
       }
       @if (toolMode() === 'freeText' || toolMode() === 'noteText') {
         <div class="toolbox-group annotation-tools">

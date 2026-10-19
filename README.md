@@ -4,10 +4,11 @@ Eine kleine Angular-Anwendung, mit der sich Schlagzeug-Patterns in frei einstell
 
 ## Funktionen
 
-- Schlagzeug-Partitur mit fünf Notenlinien, Taktstrichen und Percussion-Schlüssel
+- Schlagzeug-Partitur mit fünf Notenlinien, Taktstrichen und Percussion-Schlüssel für Crash/Hi-Hat, erstes und zweites Tom, Floortom, Snare und Bass Drum
 - Takte umbrechen abhängig von der verfügbaren Fensterbreite automatisch in weitere Zeilen
 - Noten, Pausen, Auswahl und Text über eine sichtbare Werkzeugleiste bedienen; passende Noten- und Pausenwerte auswählen und Instrumente direkt oder weiterhin anhand der Klickhöhe wählen
 - Notenbeginn rastet passend zum gewählten Notenwert auf den nächsten horizontalen Rasterpunkt ein
+- Nach Wahl von Instrument und Notenwert einen Takt mit gleichmäßig verteilten Noten füllen; vorhandene Noten und Pausen dieser Instrumentenspur im Takt werden ersetzt
 - Achtel- und kürzere Noten desselben Instruments, auch in Tuplet-Gruppen, werden automatisch pro Schlag verbunden; die Automatik ist abschaltbar
 - Notenstriche und Notenbalken lassen sich pro Note nach oben oder unten ausrichten
 - Im Auswahlmodus Noten und Texte per Klick oder Auswahlrahmen markieren, bearbeiten, löschen und kopieren
@@ -22,7 +23,7 @@ Eine kleine Angular-Anwendung, mit der sich Schlagzeug-Patterns in frei einstell
 - Einstellbare Taktart mit Zähler von 1 bis 32 und Nenner von 1, 2, 4, 8, 16, 32 oder 64
 - Dynamisches Raster bis hin zu 64teln; beim Kürzen eines Taktes werden überzählige Schritte entfernt
 - Ein bis vier Takte sowie ein Tempo von 40 bis 240 BPM
-- Wiedergabe mit synthetisierten Schlagzeugklängen im Browser
+- Wiedergabe mit synthetisierten Schlagzeugklängen für Becken, Hi-Hat, Toms, Snare und Bass Drum im Browser
 - Speichern im lokalen Browserspeicher und Export als JSON
 - Direkter PDF-Download mit frei wählbarem Titel und Takten pro Zeile; der Footer erscheint auf jeder PDF-Seite
 

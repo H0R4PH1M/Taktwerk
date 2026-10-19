@@ -78,7 +78,11 @@ export class ScoreSheetComponent {
     step: number;
     keyboardInstrument?: DrumId;
   }>();
-  readonly noteClicked = output<{ event: Event; note: ScoreFragment }>();
+  readonly noteClicked = output<{
+    event: Event;
+    measureIndex: number;
+    note: ScoreFragment;
+  }>();
   readonly noteSelectionToggled = output<{ noteId: string; additive: boolean }>();
   readonly selectionChanged = output<{
     noteIds: string[];
@@ -166,7 +170,7 @@ export class ScoreSheetComponent {
     this.placementClicked.emit({ event, measureIndex, step });
   }
 
-  protected handleNoteClick(event: Event, note: ScoreFragment): void {
+  protected handleNoteClick(event: Event, measureIndex: number, note: ScoreFragment): void {
     event.stopPropagation();
     if (this.consumeSuppressedClick(event)) {
       return;
@@ -184,7 +188,7 @@ export class ScoreSheetComponent {
       this.noteSelectionToggled.emit({ noteId: note.eventId, additive });
       return;
     }
-    this.noteClicked.emit({ event, note });
+    this.noteClicked.emit({ event, measureIndex, note });
   }
 
   protected startSelection(event: PointerEvent, measureIndex: number): void {

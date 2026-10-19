@@ -64,6 +64,7 @@
         [annotationInput]="annotationInput()"
         [toolMode]="toolMode()"
         [noteTextPosition]="noteTextPosition()"
+        [fillMeasurePending]="fillMeasurePending()"
         (noteValueSelected)="selectNoteValue($event)"
         (restValueSelected)="selectRestValue($event)"
         (autoBeamingChanged)="setAutoBeaming($event)"
@@ -83,6 +84,7 @@
         (toolModeSelected)="selectToolMode($event)"
         (noteTextPositionSelected)="noteTextPosition.set($event)"
         (instrumentSelected)="setSelectedInstrument($event)"
+        (fillMeasureToggled)="toggleFillMeasure()"
       />
 
       <app-score-sheet
@@ -117,6 +119,7 @@
         )"
         (noteClicked)="handleScoreNoteClick(
           $event.event,
+          $event.measureIndex,
           $event.note.instrumentId,
           $event.note.sourceMeasure,
           $event.note.sourceStep,

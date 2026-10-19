@@ -119,6 +119,13 @@
   width: 164px;
 }
 
+.duration-picker-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .duration-tools {
   display: flex;
   flex-wrap: wrap;
@@ -149,6 +156,23 @@
 .duration-picker-trigger[aria-expanded="true"] {
   border-color: #9bb39c;
   background: #f5f8f2;
+}
+
+.fill-measure-button {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.fill-measure-button.selected,
+.fill-measure-button[aria-pressed="true"]:hover:not(:disabled) {
+  border-color: #436f50;
+  background: #436f50;
+  color: #fffefa;
+}
+
+.fill-measure-button:disabled {
+  color: #a6a79f;
+  cursor: not-allowed;
 }
 
 .duration-arrow {

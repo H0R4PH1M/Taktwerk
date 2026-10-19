@@ -1,4 +1,12 @@
-export type DrumId = 'kick' | 'snare' | 'closedHat' | 'openHat' | 'crash';
+export type DrumId =
+  | 'kick'
+  | 'snare'
+  | 'closedHat'
+  | 'openHat'
+  | 'crash'
+  | 'tom1'
+  | 'tom2'
+  | 'floorTom';
 export type NoteValue = 1 | 2 | 4 | 8 | 16 | 32 | 64;
 export type ToolMode = 'notes' | 'rests' | 'freeText' | 'noteText' | 'select';
 export type NoteTextPosition = 'above' | 'below';

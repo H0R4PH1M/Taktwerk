@@ -88,6 +88,7 @@ export class EditorToolboxComponent {
   readonly annotationInput = input.required<string>();
   readonly toolMode = input.required<ToolMode>();
   readonly noteTextPosition = input.required<NoteTextPosition>();
+  readonly fillMeasurePending = input.required<boolean>();
 
   readonly noteValueSelected = output<NoteValue>();
   readonly restValueSelected = output<NoteValue>();
@@ -108,6 +109,7 @@ export class EditorToolboxComponent {
   readonly toolModeSelected = output<ToolMode>();
   readonly noteTextPositionSelected = output<NoteTextPosition>();
   readonly instrumentSelected = output<DrumId | null>();
+  readonly fillMeasureToggled = output<void>();
 
   selectedValue(kind: DurationPickerKind): NoteValue {
     return kind === 'notes' ? this.selectedNoteValue() : this.selectedRestValue();
@@ -136,6 +138,9 @@ export class EditorToolboxComponent {
   toolHelpText(): string {
     switch (this.toolMode()) {
       case 'notes':
+        if (this.fillMeasurePending()) {
+          return 'Taktfüllung aktiv: Klicke auf den gewünschten Takt. Die Spur des ausgewählten Instruments wird mit dem gewählten Notenwert gefüllt.';
+        }
         return 'Notenwert wählen und Rasterpunkt anklicken. Das Instrument bestimmst du über die Notenzeile oder die Instrumentauswahl; eine vorhandene Note kannst du per Klick entfernen.';
       case 'rests':
         return 'Pausenwert wählen und Rasterpunkt anklicken. Eine vorhandene Pause am Rasterpunkt kannst du per erneutem Klick entfernen.';

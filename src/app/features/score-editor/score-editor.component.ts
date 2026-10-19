@@ -132,6 +132,7 @@ export class ScoreEditorComponent implements OnDestroy {
   protected readonly undoAvailable = computed(() => this.undoHistory().length > 0);
   protected readonly editingSelection = signal(false);
   protected readonly pastePending = signal(false);
+  protected readonly fillMeasurePending = signal(false);
   protected readonly clipboard = signal<ScoreClipboard | undefined>(undefined);
   protected readonly clipboardAvailable = computed(() => this.clipboard() !== undefined);
   protected readonly selectedNoteEdit = computed<SelectionNoteEdit | null>(() => {
@@ -264,8 +265,14 @@ export class ScoreEditorComponent implements OnDestroy {
         return 44;
       case 'closedHat':
         return 52;
+      case 'tom1':
+        return 64;
       case 'snare':
         return 76;
+      case 'tom2':
+        return 88;
+      case 'floorTom':
+        return 100;
       case 'kick':
         return 112;
     }
@@ -363,6 +370,10 @@ export class ScoreEditorComponent implements OnDestroy {
     step: number,
     keyboardInstrument?: DrumId,
   ): void {
+    if (this.fillMeasurePending()) {
+      this.fillMeasureAt(measureIndex);
+      return;
+    }
     switch (this.toolMode()) {
       case 'select':
         if (this.pastePending()) {
@@ -426,6 +437,19 @@ export class ScoreEditorComponent implements OnDestroy {
     this.selectedInstrumentId.set(instrumentId);
   }
 
+  protected toggleFillMeasure(): void {
+    if (this.selectedInstrumentId() === null) {
+      this.message.set('Wähle zuerst ein Instrument aus, um einen Takt zu füllen.');
+      return;
+    }
+    this.fillMeasurePending.update((pending) => !pending);
+    this.message.set(
+      this.fillMeasurePending()
+        ? 'Taktfüllung aktiv. Klicke auf den gewünschten Takt.'
+        : 'Taktfüllung abgebrochen.',
+    );
+  }
+
   protected toggleNoteSelection(noteId: string, additive: boolean): void {
     if (additive) {
       this.selectedNoteIds.update((selected) =>
@@ -462,6 +486,10 @@ export class ScoreEditorComponent implements OnDestroy {
     annotationId: string,
   ): void {
     event.stopPropagation();
+    if (this.fillMeasurePending()) {
+      this.fillMeasureAt(measureIndex);
+      return;
+    }
     if (this.toolMode() === 'select' && this.pastePending()) {
       const annotation = this.annotations()[measureIndex].find(
         (item) => item.id === annotationId,
@@ -1005,6 +1033,7 @@ export class ScoreEditorComponent implements OnDestroy {
 
   protected selectToolMode(mode: ToolMode): void {
     this.toolMode.set(mode);
+    this.fillMeasurePending.set(false);
     if (mode !== 'select') {
       this.pastePending.set(false);
       this.clearNoteSelection();
@@ -1032,12 +1061,17 @@ export class ScoreEditorComponent implements OnDestroy {
 
   protected handleScoreNoteClick(
     event: Event,
+    clickedMeasureIndex: number,
     instrumentId: DrumId,
     sourceMeasure: number,
     sourceStep: number,
     noteId: string,
   ): void {
     event.stopPropagation();
+    if (this.fillMeasurePending()) {
+      this.fillMeasureAt(clickedMeasureIndex);
+      return;
+    }
     switch (this.toolMode()) {
       case 'select':
         this.toggleNoteSelection(
@@ -1123,6 +1157,87 @@ export class ScoreEditorComponent implements OnDestroy {
     this.discardSelectedNotes(replacedNoteIds);
     this.removeAnnotationsForNotes(replacedNoteIds);
     this.message.set('');
+  }
+
+  protected fillMeasureAt(measureIndex: number): void {
+    this.fillMeasurePending.set(false);
+    const instrumentId = this.selectedInstrumentId();
+    if (instrumentId === null) {
+      this.message.set('Wähle zuerst ein Instrument aus, um einen Takt zu füllen.');
+      return;
+    }
+
+    const duration = this.selectedNoteValue();
+    const noteTicks = this.ticksPerWholeNote() / duration;
+    const measureSteps = this.stepsPerMeasure();
+    if (!Number.isInteger(noteTicks) || noteTicks <= 0 || measureSteps % noteTicks !== 0) {
+      this.message.set('Der gewählte Notenwert füllt diesen Takt nicht ohne Rest.');
+      return;
+    }
+
+    const noteStarts = Array.from(
+      { length: measureSteps / noteTicks },
+      (_, index) => index * noteTicks,
+    );
+    const measureStart = measureIndex * measureSteps;
+    const measureEnd = measureStart + measureSteps;
+    const pattern = this.pattern();
+    const replacedNoteIds = this.overlappingNoteIds(
+      pattern,
+      instrumentId,
+      measureStart,
+      measureEnd,
+    );
+    const currentMeasureNotes = pattern[instrumentId][measureIndex] ?? [];
+    const hasExpectedNotes =
+      replacedNoteIds.length === noteStarts.length &&
+      currentMeasureNotes.length === noteStarts.length &&
+      noteStarts.every((start) =>
+        currentMeasureNotes.some(
+          (note) =>
+            note.start === start &&
+            note.duration === duration &&
+            note.tuplet === undefined &&
+            (note.stemDirection ?? this.stemDirection()) === this.stemDirection(),
+        ),
+      );
+    const replacedRestIds = this.rests()[instrumentId].flatMap((measure, sourceMeasure) =>
+      measure
+        .filter((rest) => {
+          const restStart = sourceMeasure * measureSteps + rest.start;
+          return this.intervalsOverlap(
+            measureStart,
+            measureEnd,
+            restStart,
+            restStart + this.ticksPerWholeNote() / rest.duration,
+          );
+        })
+        .map((rest) => rest.id),
+    );
+    if (hasExpectedNotes && replacedRestIds.length === 0) {
+      this.message.set('Der Takt ist bereits mit diesen Noten gefüllt.');
+      return;
+    }
+
+    const replacedRestIdSet = new Set(replacedRestIds);
+    this.clearActiveTupletIfRemoved(replacedNoteIds);
+    this.recordUndo();
+    this.pattern.update((current) => {
+      const withoutReplacedNotes = this.removeNotesFromPattern(current, replacedNoteIds);
+      const updatedTrack = withoutReplacedNotes[instrumentId].map((measure) => [...measure]);
+      updatedTrack[measureIndex] = noteStarts.map((start) => this.createNote(start, duration));
+      return { ...withoutReplacedNotes, [instrumentId]: updatedTrack };
+    });
+    this.rests.update((rests) => {
+      const updatedTrack = rests[instrumentId].map((measure) =>
+        measure.filter((rest) => !replacedRestIdSet.has(rest.id)),
+      );
+      return { ...rests, [instrumentId]: updatedTrack };
+    });
+    this.discardSelectedNotes(replacedNoteIds);
+    this.removeAnnotationsForNotes(replacedNoteIds);
+    const noteValueLabel = this.noteValues.find((note) => note.value === duration)?.label ?? '';
+    this.message.set(`Takt ${measureIndex + 1} mit ${noteStarts.length} ${noteValueLabel}noten gefüllt.`);
   }
 
   protected placeTupletNoteAt(

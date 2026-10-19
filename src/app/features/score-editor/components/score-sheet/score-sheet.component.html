@@ -112,9 +112,9 @@
                   ? ', anklicken zum Auswählen'
                   : ', anklicken zum Entfernen')
               "
-              (click)="handleNoteClick($event, note)"
-              (keydown.enter)="handleNoteClick($event, note)"
-              (keydown.space)="handleNoteClick($event, note)"
+              (click)="handleNoteClick($event, measure.index, note)"
+              (keydown.enter)="handleNoteClick($event, measure.index, note)"
+              (keydown.space)="handleNoteClick($event, measure.index, note)"
             >
               <circle class="note-hit-area" cx="0" cy="0" r="10"></circle>
               @if (

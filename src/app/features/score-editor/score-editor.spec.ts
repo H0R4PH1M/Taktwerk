@@ -320,6 +320,63 @@ describe('ScoreEditorComponent', () => {
     expect(migratedKick?.getAttribute('data-duration')).toBe('16');
   });
 
+  it('loads saved note patterns that predate the tom instruments', async () => {
+    localStorage.setItem(
+      'taktwerk-pattern-v1',
+      JSON.stringify({
+        schemaVersion: 2,
+        tempo: 92,
+        numerator: 4,
+        denominator: 4,
+        measures: 1,
+        pattern: {
+          kick: [[{ id: 'saved-kick', start: 7, duration: 4 }]],
+          snare: [[]],
+          closedHat: [[]],
+          openHat: [[]],
+          crash: [[]],
+        },
+        rests: {
+          kick: [[]],
+          snare: [[]],
+          closedHat: [[]],
+          openHat: [[]],
+          crash: [[]],
+        },
+        annotations: [[]],
+      }),
+    );
+
+    const fixture = TestBed.createComponent(ScoreEditorComponent);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(
+      compiled.querySelector(
+        '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="kick"][data-step="7"]',
+      ),
+    ).toBeTruthy();
+
+    const floorTomPicker = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="Instrument Floortom auswählen"]',
+    );
+    expect(floorTomPicker).toBeTruthy();
+    floorTomPicker?.click();
+    fixture.detectChanges();
+
+    const placement = compiled.querySelector<SVGRectElement>(
+      '.measure-sheet[aria-label="Takt 1"] .placement-target[data-step="8"]',
+    );
+    placement?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    expect(
+      compiled.querySelector(
+        '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="floorTom"]',
+      ),
+    ).toBeTruthy();
+  });
+
   it('places and removes notes on the score using the clicked height', async () => {
     const fixture = TestBed.createComponent(ScoreEditorComponent);
     await fixture.whenStable();
@@ -357,7 +414,10 @@ describe('ScoreEditorComponent', () => {
       { y: 34, id: 'crash' },
       { y: 44, id: 'openHat' },
       { y: 52, id: 'closedHat' },
+      { y: 64, id: 'tom1' },
       { y: 76, id: 'snare' },
+      { y: 88, id: 'tom2' },
+      { y: 100, id: 'floorTom' },
       { y: 112, id: 'kick' },
     ] as const;
     for (const { y, id } of instrumentHeights) {
@@ -375,6 +435,92 @@ describe('ScoreEditorComponent', () => {
         ),
       ).toBeTruthy();
     }
+  });
+
+  it('fills the clicked measure with selected notes and replaces that instrument track', async () => {
+    localStorage.setItem(
+      'taktwerk-pattern-v1',
+      JSON.stringify({
+        schemaVersion: 2,
+        tempo: 92,
+        numerator: 4,
+        denominator: 4,
+        measures: 1,
+        pattern: {
+          kick: [[{ id: 'saved-kick', start: 0, duration: 4 }]],
+          snare: [[]],
+          closedHat: [
+            [
+              { id: 'old-hat', start: 0, duration: 4 },
+              { id: 'later-hat', start: 40, duration: 8 },
+            ],
+          ],
+          openHat: [[]],
+          crash: [[]],
+          tom1: [[]],
+          tom2: [[]],
+          floorTom: [[]],
+        },
+        rests: {
+          kick: [[]],
+          snare: [[]],
+          closedHat: [[{ id: 'old-rest', start: 24, duration: 8 }]],
+          openHat: [[]],
+          crash: [[]],
+          tom1: [[]],
+          tom2: [[]],
+          floorTom: [[]],
+        },
+        annotations: [[{ id: 'old-label', text: 'alt', step: 0, y: 13, noteId: 'old-hat' }]],
+      }),
+    );
+
+    const fixture = TestBed.createComponent(ScoreEditorComponent);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    selectNoteValue(fixture, 'Achtelnote');
+    compiled
+      .querySelector<HTMLButtonElement>('[aria-label="Instrument Hi-Hat geschlossen auswählen"]')
+      ?.click();
+    fixture.detectChanges();
+    compiled.querySelector<HTMLButtonElement>('[aria-label="Takt füllen aktivieren"]')?.click();
+    fixture.detectChanges();
+
+    compiled
+      .querySelector<SVGGElement>('.score-note[data-event-id="old-hat"]')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    const filledNotes = [
+      ...compiled.querySelectorAll<SVGGElement>(
+        '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="closedHat"]',
+      ),
+    ];
+    expect(filledNotes).toHaveLength(8);
+    expect(filledNotes.map((note) => Number(note.getAttribute('data-step')))).toEqual([
+      0, 8, 16, 24, 32, 40, 48, 56,
+    ]);
+    expect(filledNotes.every((note) => note.getAttribute('data-duration') === '8')).toBe(true);
+    expect(
+      compiled.querySelector(
+        '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="kick"][data-event-id="saved-kick"]',
+      ),
+    ).toBeTruthy();
+    expect(
+      compiled.querySelector(
+        '.measure-sheet[aria-label="Takt 1"] .score-rest[data-instrument="closedHat"]',
+      ),
+    ).toBeNull();
+    expect(compiled.querySelector('[data-note-id="old-hat"]')).toBeNull();
+
+    compiled.querySelector<HTMLButtonElement>('[aria-label="Rückgängig"]')?.click();
+    fixture.detectChanges();
+
+    expect(
+      compiled.querySelector('.score-note[data-event-id="old-hat"][data-duration="4"]'),
+    ).toBeTruthy();
+    expect(compiled.querySelector('.score-rest[data-rest-id="old-rest"]')).toBeTruthy();
+    expect(compiled.querySelector('[data-note-id="old-hat"]')).toBeTruthy();
   });
 
   it('allows selecting an instrument directly or by score height', async () => {

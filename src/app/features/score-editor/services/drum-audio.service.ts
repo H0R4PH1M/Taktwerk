@@ -37,6 +37,22 @@ export class DrumAudioService {
       return;
     }
 
+    if (instrumentId === 'tom1' || instrumentId === 'tom2' || instrumentId === 'floorTom') {
+      const [startFrequency, endFrequency] =
+        instrumentId === 'tom1' ? [190, 105] : instrumentId === 'tom2' ? [140, 75] : [95, 50];
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(startFrequency, now);
+      oscillator.frequency.exponentialRampToValueAtTime(endFrequency, now + 0.12);
+      gain.gain.setValueAtTime(0.55, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.start(now);
+      oscillator.stop(now + 0.25);
+      return;
+    }
+
     const duration = instrumentId === 'crash' || instrumentId === 'openHat' ? 0.28 : 0.16;
     const buffer = context.createBuffer(
       1,
