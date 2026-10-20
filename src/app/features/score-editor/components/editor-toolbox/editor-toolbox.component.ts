@@ -9,6 +9,7 @@ import {
 import type {
   DrumId,
   DrumInstrument,
+  BeamCollisionSide,
   NoteTextPosition,
   NoteValue,
   StemDirection,
@@ -89,6 +90,7 @@ export class EditorToolboxComponent {
   readonly canManuallyDisconnectNotes = input.required<boolean>();
   readonly canOffsetSelectedBeams = input.required<boolean>();
   readonly selectedBeamsOffset = input.required<boolean>();
+  readonly selectedBeamCollisionSide = input.required<BeamCollisionSide | null>();
   readonly clipboardAvailable = input.required<boolean>();
   readonly pastePending = input.required<boolean>();
   readonly selectedNoteEdit = input<SelectionNoteEdit | null>(null);
@@ -114,6 +116,7 @@ export class EditorToolboxComponent {
   readonly manualBeamConnectRequested = output<void>();
   readonly manualBeamDisconnectRequested = output<void>();
   readonly beamOffsetToggled = output<void>();
+  readonly beamCollisionSideChanged = output<BeamCollisionSide>();
   readonly pasteRequested = output<void>();
   readonly noteEditChanged = output<NoteEditChange>();
   readonly annotationTextChanged = output<string>();

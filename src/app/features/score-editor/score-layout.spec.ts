@@ -145,4 +145,49 @@ describe('layoutScoreMeasure', () => {
     expect(beam.direction).toBe('down');
     expect(beam.y - 3).toBeGreaterThan(100 + 4);
   });
+
+  it('places a colliding beam above the other note when requested', () => {
+    const pattern = createPattern();
+    pattern.tom1[0].push(
+      { id: 'tom-one', start: 0, duration: 8, stemDirection: 'down', beamCollisionSide: 'above' },
+      { id: 'tom-two', start: 8, duration: 8, stemDirection: 'down', beamCollisionSide: 'above' },
+    );
+    pattern.floorTom[0].push({ id: 'floor-hit', start: 4, duration: 4 });
+
+    const result = layout(pattern);
+    const beam = result.beams[0];
+
+    expect(beam.y).toBeLessThanOrEqual(100 - 8);
+    expect(beam.collisionSide).toBe('above');
+  });
+
+  it('moves a beam above notes in its span even without an initial collision', () => {
+    const pattern = createPattern();
+    pattern.floorTom[0].push(
+      { id: 'floor-one', start: 0, duration: 8, stemDirection: 'up', beamCollisionSide: 'above' },
+      { id: 'floor-two', start: 8, duration: 8, stemDirection: 'up', beamCollisionSide: 'above' },
+    );
+    pattern.closedHat[0].push({ id: 'hat-hit', start: 4, duration: 4 });
+
+    const result = layout(pattern);
+    const beam = result.beams[0];
+
+    expect(beam.y + 3).toBeLessThanOrEqual(52 - 8);
+    expect(beam.collisionSide).toBe('above');
+  });
+
+  it('places a colliding beam below the other note when requested', () => {
+    const pattern = createPattern();
+    pattern.tom1[0].push(
+      { id: 'tom-one', start: 0, duration: 8, stemDirection: 'down', beamCollisionSide: 'below' },
+      { id: 'tom-two', start: 8, duration: 8, stemDirection: 'down', beamCollisionSide: 'below' },
+    );
+    pattern.floorTom[0].push({ id: 'floor-hit', start: 4, duration: 4 });
+
+    const result = layout(pattern);
+    const beam = result.beams[0];
+
+    expect(beam.y - 3).toBeGreaterThanOrEqual(100 + 8);
+    expect(beam.collisionSide).toBe('below');
+  });
 });

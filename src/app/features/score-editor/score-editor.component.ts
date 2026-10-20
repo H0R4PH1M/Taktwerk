@@ -15,6 +15,7 @@ import type {
   DrumId,
   DrumNote,
   DrumRest,
+  BeamCollisionSide,
   NoteTextPosition,
   NoteValue,
   Pattern,
@@ -72,6 +73,7 @@ interface ClipboardNote {
   duration: NoteValue;
   beamOffset?: number;
   beamOffsetX?: number;
+  beamCollisionSide?: BeamCollisionSide;
   stemDirection?: StemDirection;
   tuplet?: DrumNote['tuplet'];
   manualBeamGroupId?: string;
@@ -255,6 +257,18 @@ export class ScoreEditorComponent implements OnDestroy {
             ((note.beamOffset ?? 0) !== 0 || (note.beamOffsetX ?? 0) !== 0),
         ),
     );
+  });
+  protected readonly selectedBeamCollisionSide = computed<BeamCollisionSide | null>(() => {
+    const selected = new Set(this.selectedBeamEventIds());
+    const sides = new Set<BeamCollisionSide | undefined>(
+      this.instruments.flatMap((instrument) =>
+        this.pattern()[instrument.id]
+          .flat()
+          .filter((note) => selected.has(note.id))
+          .map((note) => note.beamCollisionSide),
+      ),
+    );
+    return sides.size === 1 ? [...sides][0] ?? null : null;
   });
   protected readonly canManuallyConnectNotes = computed(() =>
     this.selectedAnnotationIds().length === 0 &&
@@ -686,6 +700,7 @@ export class ScoreEditorComponent implements OnDestroy {
             duration: note.duration,
             beamOffset: note.beamOffset,
             beamOffsetX: note.beamOffsetX,
+            beamCollisionSide: note.beamCollisionSide,
             stemDirection: note.stemDirection,
             tuplet: note.tuplet,
             manualBeamGroupId: note.manualBeamGroupId,
@@ -819,6 +834,7 @@ export class ScoreEditorComponent implements OnDestroy {
           duration: note.duration,
           beamOffset: note.beamOffset,
           beamOffsetX: note.beamOffsetX,
+          beamCollisionSide: note.beamCollisionSide,
           stemDirection: note.stemDirection ?? this.stemDirection(),
           tuplet: note.tuplet
             ? { ...note.tuplet, id: tupletIds.get(note.tuplet.id) ?? this.createTupletId() }
@@ -1262,6 +1278,33 @@ export class ScoreEditorComponent implements OnDestroy {
     this.message.set(
       beamOffset === undefined ? 'Der Balkenversatz wurde zurückgesetzt.' : 'Die Balken wurden leicht versetzt.',
     );
+  }
+
+  protected setSelectedBeamCollisionSide(side: BeamCollisionSide): void {
+    const selectedIds = new Set(this.selectedBeamEventIds());
+    if (selectedIds.size === 0) {
+      return;
+    }
+    const hasChanges = this.instruments.some((instrument) =>
+      this.pattern()[instrument.id]
+        .flat()
+        .some((note) => selectedIds.has(note.id) && note.beamCollisionSide !== side),
+    );
+    if (!hasChanges) {
+      return;
+    }
+    this.recordUndo();
+    this.pattern.update((pattern) => {
+      const updated = {} as Pattern;
+      for (const instrument of this.instruments) {
+        updated[instrument.id] = pattern[instrument.id].map((measure) =>
+          measure.map((note) =>
+            selectedIds.has(note.id) ? { ...note, beamCollisionSide: side } : note,
+          ),
+        );
+      }
+      return updated;
+    });
   }
 
   protected clearNoteSelection(): void {

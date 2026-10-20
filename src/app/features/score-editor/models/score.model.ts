@@ -11,6 +11,7 @@ export type NoteValue = 1 | 2 | 4 | 8 | 16 | 32 | 64;
 export type ToolMode = 'notes' | 'rests' | 'freeText' | 'noteText' | 'select';
 export type NoteTextPosition = 'above' | 'below';
 export type StemDirection = 'up' | 'down';
+export type BeamCollisionSide = 'above' | 'below';
 
 export interface DrumInstrument {
   id: DrumId;
@@ -26,6 +27,7 @@ export interface DrumNote {
   duration: NoteValue;
   beamOffset?: number;
   beamOffsetX?: number;
+  beamCollisionSide?: BeamCollisionSide;
   manualBeamGroupId?: string;
   stemDirection?: StemDirection;
   tuplet?: {
@@ -72,6 +74,7 @@ export interface ScoreFragment {
   flagCount: number;
   beamOffset?: number;
   beamOffsetX?: number;
+  beamCollisionSide?: BeamCollisionSide;
   beamGroupId?: string;
   beamStemOffset?: number;
   beamStemXOffset?: number;
@@ -101,6 +104,7 @@ export interface ScoreBeamMarker {
   xStart: number;
   xEnd: number;
   y: number;
+  collisionSide?: BeamCollisionSide;
   tupletId?: string;
   tupletCount?: number;
   tupletInTimeOf?: number;

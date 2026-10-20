@@ -1,4 +1,5 @@
 import type {
+  BeamCollisionSide,
   DrumInstrument,
   NoteValue,
   Pattern,
@@ -74,6 +75,7 @@ function notesForMeasure(options: ScoreLayoutOptions): ScoreFragment[] {
             duration: note.duration,
             beamOffset: note.beamOffset,
             beamOffsetX: note.beamOffsetX,
+            beamCollisionSide: note.beamCollisionSide,
             manualBeamGroupId: note.manualBeamGroupId,
             stemDirection: note.stemDirection ?? options.stemDirection,
             filledHead: note.duration >= 4,
@@ -133,6 +135,7 @@ function notesForMeasure(options: ScoreLayoutOptions): ScoreFragment[] {
             duration: part.duration,
             beamOffset: note.beamOffset,
             beamOffsetX: note.beamOffsetX,
+            beamCollisionSide: note.beamCollisionSide,
             manualBeamGroupId: note.manualBeamGroupId,
             stemDirection: note.stemDirection ?? options.stemDirection,
             filledHead: part.duration >= 4,
@@ -178,6 +181,7 @@ function beamNotesForMeasure(
         note.duration,
         note.beamOffset ?? 0,
         note.beamOffsetX ?? 0,
+        note.beamCollisionSide ?? 'automatic',
         beatIndex,
         note.stemDirection,
         note.tupletId ?? 'regular',
@@ -194,6 +198,7 @@ function beamNotesForMeasure(
       noteIds: string[];
       beamOffset: number;
       beamOffsetX: number;
+      beamCollisionSide?: BeamCollisionSide;
     }
   > = [];
   const addBeam = (group: ScoreFragment[], beatIndex: number, manualGroupId?: string) => {
@@ -217,6 +222,7 @@ function beamNotesForMeasure(
       y: first.y + (direction === 'down' ? 34 : -34),
       beamOffset: first.beamOffset ?? 0,
       beamOffsetX: first.beamOffsetX ?? 0,
+      beamCollisionSide: first.beamCollisionSide,
       tupletId: first.tupletId,
       tupletCount: first.tupletCount,
       tupletInTimeOf: first.tupletInTimeOf,
@@ -270,6 +276,7 @@ function beamNotesForMeasure(
           note.duration === first.duration &&
           note.stemDirection === first.stemDirection &&
           note.beamOffsetX === first.beamOffsetX &&
+          note.beamCollisionSide === first.beamCollisionSide &&
           (index === 0 || Math.abs(note.measureStep - (group[index - 1].measureStep + spacing)) < 1e-7),
       );
     if (!isValidGroup) {
@@ -325,6 +332,29 @@ function beamNotesForMeasure(
       candidate.beamOffset;
     const beamHeight = (candidate.levels - 1) * 5 + 3;
     const candidateHasTupletLabel = candidate.tupletIndexStart === 0;
+    const offsetDirection =
+      candidate.beamCollisionSide === 'above'
+        ? -1
+        : candidate.beamCollisionSide === 'below'
+          ? 1
+          : candidate.direction === 'down'
+            ? 1
+            : -1;
+    const notesInBeamSpan = notes.filter(
+      (note) =>
+        !candidate.noteIds.includes(note.id) &&
+        candidate.xStart <= note.x + 8 &&
+        candidate.xEnd >= note.x - 8,
+    );
+    if (candidate.beamCollisionSide === 'above' && notesInBeamSpan.length > 0) {
+      const highestNoteY = Math.min(...notesInBeamSpan.map((note) => note.y));
+      const beamBottomOffset = candidate.direction === 'down' ? 0 : beamHeight;
+      y = Math.min(y, highestNoteY - 8 - beamBottomOffset);
+    } else if (candidate.beamCollisionSide === 'below' && notesInBeamSpan.length > 0) {
+      const lowestNoteY = Math.max(...notesInBeamSpan.map((note) => note.y));
+      const beamTopOffset = candidate.direction === 'down' ? beamHeight : 0;
+      y = Math.max(y, lowestNoteY + 8 + beamTopOffset);
+    }
     const bounds = (direction: StemDirection, beamY: number, height: number, hasLabel: boolean) => ({
       top: direction === 'down' ? beamY - height : beamY - (hasLabel ? 11 : 0),
       bottom: direction === 'down' ? beamY + (hasLabel ? 11 : 0) : beamY + height,
@@ -344,7 +374,7 @@ function beamNotesForMeasure(
         ) {
           return false;
         }
-        return current.top < note.y + 6 && current.bottom > note.y - 6;
+        return current.top < note.y + 8 && current.bottom > note.y - 8;
       });
       const beamCollision = placedBeams.some((previous) => {
         if (candidate.xStart > previous.xEnd || candidate.xEnd < previous.xStart) {
@@ -360,7 +390,6 @@ function beamNotesForMeasure(
       });
       return noteCollision || beamCollision;
     };
-    const offsetDirection = candidate.direction === 'down' ? 1 : -1;
     while (collides()) {
       y += offsetDirection * 2;
     }
@@ -375,6 +404,7 @@ function beamNotesForMeasure(
       xStart: placed.xStart,
       xEnd: placed.xEnd,
       y: placed.y,
+      collisionSide: placed.beamCollisionSide,
       tupletId: placed.tupletId,
       tupletCount: placed.tupletCount,
       tupletInTimeOf: placed.tupletInTimeOf,

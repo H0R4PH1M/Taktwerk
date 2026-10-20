@@ -399,25 +399,49 @@
       </button>
       </div>
       @if (selectedNoteCount() > 0) {
-        <div class="selection-direction-controls" role="group" aria-label="Balkenposition der Notenauswahl">
+        <div class="selection-direction-controls" role="group" aria-label="Richtung der Notenauswahl">
           <span class="selection-count" aria-live="polite">
             {{ selectedNoteCount() }} {{ selectedNoteCount() === 1 ? 'Note' : 'Noten' }} ausgewählt
           </span>
           <button
             class="text-mode-option"
             type="button"
-            aria-label="Balken über den Noten"
+            aria-label="Auswahl nach oben ausrichten"
             (click)="selectedStemDirectionChanged.emit('up')"
           >
-            Balken über den Noten
+            Nach oben
           </button>
           <button
             class="text-mode-option"
             type="button"
-            aria-label="Balken unter den Noten"
+            aria-label="Auswahl nach unten ausrichten"
             (click)="selectedStemDirectionChanged.emit('down')"
           >
-            Balken unter den Noten
+            Nach unten
+          </button>
+        </div>
+      }
+      @if (canOffsetSelectedBeams()) {
+        <div class="selection-direction-controls" role="group" aria-label="Balkenposition relativ zu kollidierenden Noten">
+          <button
+            class="text-mode-option"
+            type="button"
+            aria-label="Balken oberhalb kollidierender Noten"
+            [class.selected]="selectedBeamCollisionSide() === 'above'"
+            [attr.aria-pressed]="selectedBeamCollisionSide() === 'above'"
+            (click)="beamCollisionSideChanged.emit('above')"
+          >
+            Über kollidierenden Noten
+          </button>
+          <button
+            class="text-mode-option"
+            type="button"
+            aria-label="Balken unterhalb kollidierender Noten"
+            [class.selected]="selectedBeamCollisionSide() === 'below'"
+            [attr.aria-pressed]="selectedBeamCollisionSide() === 'below'"
+            (click)="beamCollisionSideChanged.emit('below')"
+          >
+            Unter kollidierenden Noten
           </button>
         </div>
       }

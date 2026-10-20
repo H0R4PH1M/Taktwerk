@@ -1211,6 +1211,67 @@ describe('ScoreEditorComponent', () => {
         expect(Number(firstStem.getAttribute('x1'))).toBe(originalStemX);
       });
 
+  it('places a selected beam above a colliding hi-hat and persists that choice', async () => {
+    const fixture = TestBed.createComponent(ScoreEditorComponent);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.clear-button')?.click();
+    fixture.detectChanges();
+
+    compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="Instrument Snare auswählen"]',
+    )?.click();
+    selectNoteValue(fixture, 'Achtelnote');
+    for (const step of [0, 8]) {
+      compiled
+        .querySelector<SVGRectElement>(`.placement-target[data-step="${step}"]`)
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      fixture.detectChanges();
+    }
+
+    compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="Instrument Hi-Hat geschlossen auswählen"]',
+    )?.click();
+    selectNoteValue(fixture, 'Viertelnote');
+    compiled
+      .querySelector<SVGRectElement>('.placement-target[data-step="4"]')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    selectSelectionTool(fixture);
+    const snareNote = compiled.querySelector<SVGGElement>(
+      '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="snare"][data-step="0"]',
+    );
+    if (!snareNote) {
+      throw new Error('Die beampaarige Snare-Note wurde nicht angezeigt.');
+    }
+    snareNote.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    const beam = compiled.querySelector<SVGGElement>(
+      '.measure-sheet[aria-label="Takt 1"] .score-beam[data-instrument="snare"]',
+    );
+    const aboveButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="Balken oberhalb kollidierender Noten"]',
+    );
+    if (!beam || !aboveButton) {
+      throw new Error('Balken oder Kollisionsseiten-Steuerung wurde nicht angezeigt.');
+    }
+    aboveButton.click();
+    fixture.detectChanges();
+    expect(beam.getAttribute('data-collision-side')).toBe('above');
+    expect(Number(beam.getAttribute('data-y')) + 3).toBeLessThanOrEqual(52 - 8);
+
+    compiled.querySelector<HTMLButtonElement>('.save-button')?.click();
+    fixture.destroy();
+    const restoredFixture = TestBed.createComponent(ScoreEditorComponent);
+    await restoredFixture.whenStable();
+    expect(
+      (restoredFixture.nativeElement as HTMLElement)
+        .querySelector('.score-beam[data-instrument="snare"]')
+        ?.getAttribute('data-collision-side'),
+      ).toBe('above');
+  });
+
   it('draws note stems and beams downward and persists the direction', async () => {
     const fixture = TestBed.createComponent(ScoreEditorComponent);
     await fixture.whenStable();
@@ -1305,7 +1366,7 @@ describe('ScoreEditorComponent', () => {
     expect(compiled.querySelector('.selection-count')?.textContent).toContain('1 Note ausgewählt');
 
     compiled.querySelector<HTMLButtonElement>(
-      '[aria-label="Balken unter den Noten"]',
+      '[aria-label="Auswahl nach unten ausrichten"]',
     )?.click();
     fixture.detectChanges();
     expect(selectedNote.querySelector('.note-stem')?.getAttribute('x1')).toBe('-5');
