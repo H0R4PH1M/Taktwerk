@@ -238,6 +238,51 @@
   gap: 5px;
 }
 
+.selection-editor {
+  flex: 1 1 100%;
+  align-items: flex-end;
+  padding: 10px;
+  border: 1px solid #e3e5dc;
+  border-radius: 6px;
+  background: #f3f4ee;
+}
+
+.selection-editor > label,
+.selection-editor label {
+  min-width: min(180px, 100%);
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 5px;
+  color: #60685f;
+  font-size: 10px;
+}
+
+.selection-editor select,
+.selection-editor input {
+  width: min(240px, 100%);
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid #d8ddd3;
+  border-radius: 6px;
+  background: #fffefa;
+  color: #38483d;
+  font: 500 11px var(--font-body);
+}
+
+.selection-editor select:focus-visible,
+.selection-editor input:focus-visible {
+  outline: 2px solid #789a78;
+  outline-offset: 1px;
+}
+
+.selection-edit-hint {
+  flex: 1 1 100%;
+  color: #747a70;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
 .tuplet-tools {
   flex: 0 1 auto;
 }

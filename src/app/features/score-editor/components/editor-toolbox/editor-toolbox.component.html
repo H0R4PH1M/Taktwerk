@@ -324,7 +324,7 @@
         class="text-mode-option"
         type="button"
         aria-label="Auswahl bearbeiten"
-        [disabled]="selectedObjectCount() !== 1"
+        [disabled]="selectedObjectCount() !== 1 && selectedObjectCount() !== selectedNoteCount()"
         [attr.aria-pressed]="editingSelection()"
         (click)="selectionEditToggled.emit()"
       >
@@ -475,6 +475,43 @@
               [value]="note.start + 1"
               (change)="emitNoteEdit('start', $event)"
             />
+          </label>
+        }
+      </div>
+    }
+    @if (editingSelection() && selectedNotesEdit(); as notes) {
+      <div class="selection-editor multi-note-editor" role="group" aria-label="Noten gemeinsam bearbeiten">
+        @if (notes.containsTuplets) {
+          <span class="selection-edit-hint">Auswahlen mit Tuplet-Noten können nicht gemeinsam bearbeitet werden.</span>
+        } @else {
+          <span class="selection-count">{{ notes.count }} Noten gemeinsam bearbeiten</span>
+          <label>
+            <span>Instrument</span>
+            <select
+              aria-label="Instrument der ausgewählten Noten"
+              [value]="notes.instrumentId"
+              (change)="emitNoteEdit('instrumentId', $event)"
+            >
+              @for (instrument of instruments(); track instrument.id) {
+                <option [value]="instrument.id" [selected]="instrument.id === notes.instrumentId">
+                  {{ instrument.name }}
+                </option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>Notenwert</span>
+            <select
+              aria-label="Notenwert der ausgewählten Noten"
+              [value]="notes.duration"
+              (change)="emitNoteEdit('duration', $event)"
+            >
+              @for (duration of noteValues(); track duration.value) {
+                <option [value]="duration.value" [selected]="duration.value === notes.duration">
+                  {{ duration.label }}
+                </option>
+              }
+            </select>
           </label>
         }
       </div>

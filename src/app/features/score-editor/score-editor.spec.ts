@@ -1427,6 +1427,78 @@ describe('ScoreEditorComponent', () => {
     ).toBeNull();
   });
 
+  it('edits the duration and instrument of multiple selected notes together', async () => {
+    const fixture = TestBed.createComponent(ScoreEditorComponent);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.clear-button')?.click();
+    compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="Instrument Floortom auswählen"]',
+    )?.click();
+    selectNoteValue(fixture, 'Achtelnote');
+    for (const step of [0, 16]) {
+      if (step === 0) {
+        compiled
+          .querySelector<SVGRectElement>(`.placement-target[data-step="${step}"]`)
+          ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        fixture.detectChanges();
+        continue;
+      }
+      compiled.querySelector<HTMLButtonElement>(
+        '[aria-label="Instrument Hi-Hat geschlossen auswählen"]',
+      )?.click();
+      selectNoteValue(fixture, 'Sechzehntelnote');
+      compiled
+        .querySelector<SVGRectElement>(`.placement-target[data-step="${step}"]`)
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      fixture.detectChanges();
+    }
+
+    selectSelectionTool(fixture);
+    const firstClickedNote = compiled.querySelector<SVGGElement>(
+      '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="closedHat"][data-step="16"]',
+    );
+    const secondClickedNote = compiled.querySelector<SVGGElement>(
+      '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="floorTom"][data-step="0"]',
+    );
+    expect(firstClickedNote).toBeTruthy();
+    expect(secondClickedNote).toBeTruthy();
+    expect(firstClickedNote?.getAttribute('data-duration')).toBe('16');
+    firstClickedNote?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    secondClickedNote?.dispatchEvent(new MouseEvent('click', { bubbles: true, ctrlKey: true }));
+    fixture.detectChanges();
+
+    const editButton = compiled.querySelector<HTMLButtonElement>(
+      '[aria-label="Auswahl bearbeiten"]',
+    );
+    expect(editButton?.disabled).toBe(false);
+    editButton?.click();
+    fixture.detectChanges();
+    const duration = compiled.querySelector<HTMLSelectElement>(
+      '[aria-label="Notenwert der ausgewählten Noten"]',
+    );
+    const instrument = compiled.querySelector<HTMLSelectElement>(
+      '[aria-label="Instrument der ausgewählten Noten"]',
+    );
+    if (!duration || !instrument) {
+      throw new Error('Gemeinsame Notenbearbeitung wurde nicht angezeigt.');
+    }
+    expect(duration.value).toBe('16');
+    expect(instrument.value).toBe('closedHat');
+    duration.value = '32';
+    duration.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    expect(compiled.querySelectorAll('.score-note[data-duration="32"]')).toHaveLength(2);
+
+    instrument.value = 'snare';
+    instrument.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    expect(
+      compiled.querySelectorAll('.score-note[data-instrument="snare"][data-duration="32"]'),
+    ).toHaveLength(2);
+    expect(compiled.querySelectorAll('.score-note[data-instrument="floorTom"]')).toHaveLength(0);
+  });
+
   it('edits and deletes selected score text', async () => {
     const fixture = TestBed.createComponent(ScoreEditorComponent);
     await fixture.whenStable();

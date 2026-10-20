@@ -33,6 +33,13 @@ export interface SelectionNoteEdit {
   isTuplet: boolean;
 }
 
+export interface SelectionNotesEdit {
+  count: number;
+  instrumentId: DrumId;
+  duration: NoteValue;
+  containsTuplets: boolean;
+}
+
 export interface SelectionAnnotationEdit {
   id: string;
   text: string;
@@ -85,6 +92,7 @@ export class EditorToolboxComponent {
   readonly clipboardAvailable = input.required<boolean>();
   readonly pastePending = input.required<boolean>();
   readonly selectedNoteEdit = input<SelectionNoteEdit | null>(null);
+  readonly selectedNotesEdit = input<SelectionNotesEdit | null>(null);
   readonly selectedAnnotationEdit = input<SelectionAnnotationEdit | null>(null);
   readonly tupletsEnabled = input.required<boolean>();
   readonly tupletCount = input.required<number>();

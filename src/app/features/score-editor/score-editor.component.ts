@@ -31,6 +31,7 @@ import type {
   NoteEditChange,
   SelectionAnnotationEdit,
   SelectionNoteEdit,
+  SelectionNotesEdit,
 } from './components/editor-toolbox/editor-toolbox.component';
 import {
   DRUM_INSTRUMENTS,
@@ -172,6 +173,28 @@ export class ScoreEditorComponent implements OnDestroy {
       }
     }
     return null;
+  });
+  protected readonly selectedNotesEdit = computed<SelectionNotesEdit | null>(() => {
+    if (this.selectedNoteIds().length < 2 || this.selectedAnnotationIds().length !== 0) {
+      return null;
+    }
+    const notesById = new Map(
+      this.selectedBeamNotes().map((item) => [item.note.id, item] as const),
+    );
+    const selected = this.selectedNoteIds().flatMap((id) => {
+      const item = notesById.get(id);
+      return item ? [item] : [];
+    });
+    if (selected.length !== this.selectedNoteIds().length) {
+      return null;
+    }
+    const first = selected[0];
+    return {
+      count: selected.length,
+      instrumentId: first.instrumentId,
+      duration: first.note.duration,
+      containsTuplets: selected.some(({ note }) => note.tuplet !== undefined),
+    };
   });
   protected readonly selectedAnnotationEdit = computed<SelectionAnnotationEdit | null>(() => {
     if (this.selectedAnnotationIds().length !== 1 || this.selectedNoteIds().length !== 0) {
@@ -857,6 +880,10 @@ export class ScoreEditorComponent implements OnDestroy {
   }
 
   protected editSelectedNote(change: NoteEditChange): void {
+    if (this.selectedNoteIds().length > 1) {
+      this.editSelectedNotes(change);
+      return;
+    }
     const selected = this.selectedNoteEdit();
     if (!selected) {
       return;
@@ -981,6 +1008,106 @@ export class ScoreEditorComponent implements OnDestroy {
         .filter((annotation) => annotation.noteId === existing.id)
         .map((annotation) => ({ ...annotation, step: start }));
       updated[measureIndex].push(...attached);
+      return updated;
+    });
+    this.message.set('');
+  }
+
+  private editSelectedNotes(change: NoteEditChange): void {
+    const selected = this.selectedBeamNotes();
+    if (selected.length < 2 || this.selectedAnnotationIds().length > 0) {
+      return;
+    }
+    if (selected.some(({ note }) => note.tuplet !== undefined)) {
+      this.message.set('Auswahlen mit Tuplet-Noten können nicht gemeinsam bearbeitet werden.');
+      return;
+    }
+
+    let instrumentId = selected[0].instrumentId;
+    let duration = selected[0].note.duration;
+    if (change.field === 'instrumentId') {
+      if (!this.instruments.some((instrument) => instrument.id === change.value)) {
+        this.message.set('Das ausgewählte Instrument ist ungültig.');
+        return;
+      }
+      instrumentId = change.value as DrumId;
+    } else if (change.field === 'duration') {
+      if (!this.noteValues.some((value) => value.value === change.value)) {
+        this.message.set('Der ausgewählte Notenwert ist ungültig.');
+        return;
+      }
+      duration = change.value as NoteValue;
+    } else {
+      this.message.set('Takt und Schritt können nur für einzelne Noten bearbeitet werden.');
+      return;
+    }
+
+    const selectedIds = new Set(selected.map(({ note }) => note.id));
+    const proposed = selected.map((item) => ({ ...item, instrumentId, duration }));
+    const hasSelectedConflict = proposed.some((item, index) =>
+      proposed.slice(index + 1).some((other) => {
+        if (item.instrumentId !== other.instrumentId) {
+          return false;
+        }
+        const itemStart = item.measureIndex * this.stepsPerMeasure() + item.note.start;
+        const otherStart = other.measureIndex * this.stepsPerMeasure() + other.note.start;
+        return this.intervalsOverlap(
+          itemStart,
+          itemStart + this.ticksPerWholeNote() / duration,
+          otherStart,
+          otherStart + this.ticksPerWholeNote() / duration,
+        );
+      }),
+    );
+    const conflictsWithExisting = proposed.some((item) => {
+      const start = item.measureIndex * this.stepsPerMeasure() + item.note.start;
+      const end = start + this.ticksPerWholeNote() / duration;
+      const noteConflict = this.pattern()[instrumentId].some((measure, measureIndex) =>
+        measure.some((note) => {
+          if (selectedIds.has(note.id)) {
+            return false;
+          }
+          const otherStart = measureIndex * this.stepsPerMeasure() + note.start;
+          return this.intervalsOverlap(
+            start,
+            end,
+            otherStart,
+            otherStart + this.noteDurationTicks(note),
+          );
+        }),
+      );
+      const restConflict = this.rests()[instrumentId].some((measure, measureIndex) =>
+        measure.some((rest) => {
+          const otherStart = measureIndex * this.stepsPerMeasure() + rest.start;
+          return this.intervalsOverlap(
+            start,
+            end,
+            otherStart,
+            otherStart + this.ticksPerWholeNote() / rest.duration,
+          );
+        }),
+      );
+      return noteConflict || restConflict;
+    });
+    if (hasSelectedConflict || conflictsWithExisting) {
+      this.message.set('Die Änderungen würden Noten oder Pausen desselben Instruments überlappen.');
+      return;
+    }
+
+    this.recordUndo();
+    this.pattern.update((pattern) => {
+      const updated = {} as Pattern;
+      for (const instrument of this.instruments) {
+        updated[instrument.id] = pattern[instrument.id].map((measure) =>
+          measure.filter((note) => !selectedIds.has(note.id)),
+        );
+      }
+      for (const item of proposed) {
+        updated[item.instrumentId][item.measureIndex].push({
+          ...item.note,
+          duration,
+        });
+      }
       return updated;
     });
     this.message.set('');
