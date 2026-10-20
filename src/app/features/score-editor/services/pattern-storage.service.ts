@@ -288,6 +288,10 @@ export class PatternStorageService {
                 note.start < 0 ||
                 note.start >= stepsPerMeasure ||
                 (note.tuplet === undefined && !Number.isInteger(note.start)) ||
+                (note.beamOffset !== undefined &&
+                  (!Number.isInteger(note.beamOffset) || Math.abs(note.beamOffset) > 12)) ||
+                (note.beamOffsetX !== undefined &&
+                  (!Number.isInteger(note.beamOffsetX) || Math.abs(note.beamOffsetX) > 12)) ||
                 (note.manualBeamGroupId !== undefined &&
                   (typeof note.manualBeamGroupId !== 'string' ||
                     note.manualBeamGroupId.length === 0)) ||

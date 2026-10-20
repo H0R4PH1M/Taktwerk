@@ -69,6 +69,8 @@ interface ClipboardNote {
   instrumentId: DrumId;
   absoluteStart: number;
   duration: NoteValue;
+  beamOffset?: number;
+  beamOffsetX?: number;
   stemDirection?: StemDirection;
   tuplet?: DrumNote['tuplet'];
   manualBeamGroupId?: string;
@@ -198,6 +200,37 @@ export class ScoreEditorComponent implements OnDestroy {
           .filter((note) => selected.has(note.id))
           .map((note) => ({ instrumentId: instrument.id, measureIndex, note })),
       ),
+    );
+  });
+  private readonly selectedBeamEventIds = computed(() => {
+    const selected = new Set(this.selectedNoteIds());
+    const fragments = this.scoreMeasures().flatMap((measure) => measure.notes);
+    const selectedBeamIds = new Set(
+      fragments.flatMap((note) =>
+        selected.has(note.eventId) && note.beamGroupId ? [note.beamGroupId] : [],
+      ),
+    );
+    return [
+      ...new Set(
+        fragments
+          .filter((note) => note.beamGroupId && selectedBeamIds.has(note.beamGroupId))
+          .map((note) => note.eventId),
+      ),
+    ];
+  });
+  protected readonly canOffsetSelectedBeams = computed(
+    () => this.selectedBeamEventIds().length > 0,
+  );
+  protected readonly selectedBeamsOffset = computed(() => {
+    const selected = new Set(this.selectedBeamEventIds());
+    return this.instruments.some((instrument) =>
+      this.pattern()[instrument.id]
+        .flat()
+        .some(
+          (note) =>
+            selected.has(note.id) &&
+            ((note.beamOffset ?? 0) !== 0 || (note.beamOffsetX ?? 0) !== 0),
+        ),
     );
   });
   protected readonly canManuallyConnectNotes = computed(() =>
@@ -628,6 +661,8 @@ export class ScoreEditorComponent implements OnDestroy {
             instrumentId: instrument.id,
             absoluteStart: measureIndex * this.stepsPerMeasure() + note.start,
             duration: note.duration,
+            beamOffset: note.beamOffset,
+            beamOffsetX: note.beamOffsetX,
             stemDirection: note.stemDirection,
             tuplet: note.tuplet,
             manualBeamGroupId: note.manualBeamGroupId,
@@ -759,6 +794,8 @@ export class ScoreEditorComponent implements OnDestroy {
           id: note.id,
           start: note.localStart,
           duration: note.duration,
+          beamOffset: note.beamOffset,
+          beamOffsetX: note.beamOffsetX,
           stemDirection: note.stemDirection ?? this.stemDirection(),
           tuplet: note.tuplet
             ? { ...note.tuplet, id: tupletIds.get(note.tuplet.id) ?? this.createTupletId() }
@@ -1074,6 +1111,30 @@ export class ScoreEditorComponent implements OnDestroy {
       return updated;
     });
     this.message.set('Die manuelle Notenverbindung wurde gelöst.');
+  }
+
+  protected toggleSelectedBeamOffset(): void {
+    const selectedIds = new Set(this.selectedBeamEventIds());
+    if (selectedIds.size === 0) {
+      return;
+    }
+    const beamOffset = this.selectedBeamsOffset() ? undefined : 3;
+    const beamOffsetX = beamOffset;
+    this.recordUndo();
+    this.pattern.update((pattern) => {
+      const updated = {} as Pattern;
+      for (const instrument of this.instruments) {
+        updated[instrument.id] = pattern[instrument.id].map((measure) =>
+          measure.map((note) =>
+            selectedIds.has(note.id) ? { ...note, beamOffset, beamOffsetX } : note,
+          ),
+        );
+      }
+      return updated;
+    });
+    this.message.set(
+      beamOffset === undefined ? 'Der Balkenversatz wurde zurückgesetzt.' : 'Die Balken wurden leicht versetzt.',
+    );
   }
 
   protected clearNoteSelection(): void {
@@ -2364,28 +2425,30 @@ export class ScoreEditorComponent implements OnDestroy {
   }
 
   private isValidManualBeamSelection(notes: LocatedSelectedNote[]): boolean {
-    if (notes.length !== 2) {
+    if (notes.length < 2) {
       return false;
     }
     const ordered = [...notes].sort((left, right) => left.note.start - right.note.start);
-    const [first, second] = ordered;
+    const first = ordered[0];
+    const spacing = this.ticksPerWholeNote() / first.note.duration;
     return (
-      first.instrumentId === second.instrumentId &&
-      first.measureIndex === second.measureIndex &&
       first.note.duration >= 8 &&
-      first.note.duration === second.note.duration &&
-      (first.note.stemDirection ?? this.stemDirection()) ===
-        (second.note.stemDirection ?? this.stemDirection()) &&
-      !first.note.tuplet &&
-      !second.note.tuplet &&
-      !first.note.manualBeamGroupId &&
-      !second.note.manualBeamGroupId &&
-      first.note.start + this.ticksPerWholeNote() / first.note.duration <=
+      first.note.start + spacing * ordered.length <=
         this.stepsPerMeasure() &&
-      Math.abs(
-        second.note.start -
-          (first.note.start + this.ticksPerWholeNote() / first.note.duration),
-      ) < 1e-7
+      ordered.every(
+        (current, index) =>
+          current.instrumentId === first.instrumentId &&
+          current.measureIndex === first.measureIndex &&
+          current.note.duration === first.note.duration &&
+          (current.note.stemDirection ?? this.stemDirection()) ===
+            (first.note.stemDirection ?? this.stemDirection()) &&
+          !current.note.tuplet &&
+          !current.note.manualBeamGroupId &&
+          (index === 0 ||
+            Math.abs(
+              current.note.start - (ordered[index - 1].note.start + spacing),
+            ) < 1e-7),
+      )
     );
   }
 

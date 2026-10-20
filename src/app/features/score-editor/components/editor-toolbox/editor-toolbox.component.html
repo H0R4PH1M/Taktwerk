@@ -368,6 +368,16 @@
           Verbindung lösen
         </button>
       }
+      @if (canOffsetSelectedBeams()) {
+        <button
+          class="text-mode-option"
+          type="button"
+          aria-label="{{ selectedBeamsOffset() ? 'Balkenversatz zurücksetzen' : 'Auswahlbalken leicht versetzen' }}"
+          (click)="beamOffsetToggled.emit()"
+        >
+          {{ selectedBeamsOffset() ? 'Versatz zurücksetzen' : 'Balken leicht versetzen' }}
+        </button>
+      }
       <button
         class="text-mode-option"
         type="button"
@@ -380,7 +390,7 @@
         {{ pastePending() ? 'Einfügen: Ziel wählen' : 'Einfügen' }}
       </button>
       <button
-        class="text-button"
+        class="text-mode-option"
         type="button"
         [disabled]="selectedObjectCount() === 0"
         (click)="selectionCleared.emit()"

@@ -101,6 +101,7 @@
               [attr.data-step]="note.measureStep"
               [attr.data-beam-group-id]="note.beamGroupId ?? null"
               [attr.data-beam-stem-offset]="note.beamStemOffset ?? null"
+              [attr.data-beam-stem-x-offset]="note.beamStemXOffset ?? null"
               [attr.data-tuplet-id]="note.tupletId ?? null"
               [attr.data-tuplet-index]="note.tupletIndex ?? null"
               [attr.transform]="'translate(' + note.x + ' ' + note.y + ')'"
@@ -137,9 +138,9 @@
               @if (note.stemmed) {
                 <line
                   class="note-stem"
-                  [attr.x1]="note.stemDirection === 'down' ? -5 : 5"
+                  [attr.x1]="(note.stemDirection === 'down' ? -5 : 5) + (note.beamStemXOffset ?? 0)"
                   y1="0"
-                  [attr.x2]="note.stemDirection === 'down' ? -5 : 5"
+                  [attr.x2]="(note.stemDirection === 'down' ? -5 : 5) + (note.beamStemXOffset ?? 0)"
                   [attr.y2]="
                     note.beamGroupId
                       ? beamStemEnd(note.flagCount, note.beamStemOffset ?? 0, note.stemDirection)

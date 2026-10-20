@@ -1075,6 +1075,136 @@ describe('ScoreEditorComponent', () => {
         expect(compiled.querySelectorAll('.score-beam[data-instrument="floorTom"]')).toHaveLength(0);
       });
 
+      it('manually connects sixteenth notes in a 7/8 measure', async () => {
+        const fixture = TestBed.createComponent(ScoreEditorComponent);
+        await fixture.whenStable();
+        const compiled = fixture.nativeElement as HTMLElement;
+        compiled.querySelector<HTMLButtonElement>('.clear-button')?.click();
+        const numerator = compiled.querySelector<HTMLInputElement>('[aria-label="Taktart-Zähler"]');
+        const denominator = compiled.querySelector<HTMLSelectElement>('[aria-label="Taktart-Nenner"]');
+        if (!numerator || !denominator) {
+          throw new Error('Taktart-Steuerelemente wurden nicht angezeigt.');
+        }
+        numerator.value = '7';
+        numerator.dispatchEvent(new Event('change', { bubbles: true }));
+        denominator.value = '8';
+        denominator.dispatchEvent(new Event('change', { bubbles: true }));
+        fixture.detectChanges();
+
+        const advancedTools = compiled.querySelector<HTMLDetailsElement>('.advanced-tools');
+        if (!advancedTools) {
+          throw new Error('Erweiterte Werkzeuge wurden nicht angezeigt.');
+        }
+        advancedTools.open = true;
+        fixture.detectChanges();
+        const autoBeaming = compiled.querySelector<HTMLInputElement>(
+          '[aria-label="Noten automatisch verbinden"]',
+        );
+        if (!autoBeaming) {
+          throw new Error('Auto-Beaming-Einstellung wurde nicht angezeigt.');
+        }
+        autoBeaming.checked = false;
+        autoBeaming.dispatchEvent(new Event('change', { bubbles: true }));
+
+        compiled.querySelector<HTMLButtonElement>(
+          '[aria-label="Instrument Floortom auswählen"]',
+        )?.click();
+        selectNoteValue(fixture, 'Sechzehntelnote');
+        for (const step of [0, 4, 8, 12]) {
+          compiled
+            .querySelector<SVGRectElement>(`.placement-target[data-step="${step}"]`)
+            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          fixture.detectChanges();
+        }
+        selectSelectionTool(fixture);
+        const notes = compiled.querySelectorAll<SVGGElement>(
+          '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="floorTom"]',
+        );
+        expect(notes).toHaveLength(4);
+        notes[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        for (const note of Array.from(notes).slice(1)) {
+          note.dispatchEvent(new MouseEvent('click', { bubbles: true, ctrlKey: true }));
+        }
+        fixture.detectChanges();
+
+        const connectButton = compiled.querySelector<HTMLButtonElement>(
+          '[aria-label="Noten manuell verbinden"]',
+        );
+        expect(connectButton).toBeTruthy();
+        connectButton?.click();
+        fixture.detectChanges();
+        expect(compiled.querySelectorAll('.score-beam[data-instrument="floorTom"]')).toHaveLength(1);
+      });
+
+      it('slightly offsets the selected beam and resets it without moving notes', async () => {
+        const fixture = TestBed.createComponent(ScoreEditorComponent);
+        await fixture.whenStable();
+        const compiled = fixture.nativeElement as HTMLElement;
+        compiled.querySelector<HTMLButtonElement>('.clear-button')?.click();
+        fixture.detectChanges();
+        compiled.querySelector<HTMLButtonElement>(
+          '[aria-label="Instrument Floortom auswählen"]',
+        )?.click();
+        selectNoteValue(fixture, 'Achtelnote');
+        for (const step of [0, 8]) {
+          compiled
+            .querySelector<SVGRectElement>(`.placement-target[data-step="${step}"]`)
+            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          fixture.detectChanges();
+        }
+
+        selectSelectionTool(fixture);
+        const firstNote = compiled.querySelector<SVGGElement>(
+          '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="floorTom"][data-step="0"]',
+        );
+        const secondNote = compiled.querySelector<SVGGElement>(
+          '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="floorTom"][data-step="8"]',
+        );
+        if (!firstNote || !secondNote) {
+          throw new Error('Die beampaarige Auswahl wurde nicht angezeigt.');
+        }
+        const originalTransforms = [firstNote, secondNote].map((note) => note.getAttribute('transform'));
+        firstNote.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        fixture.detectChanges();
+        const beam = compiled.querySelector<SVGGElement>(
+          '.measure-sheet[aria-label="Takt 1"] .score-beam[data-instrument="floorTom"]',
+        );
+        if (!beam) {
+          throw new Error('Der Notenbalken wurde nicht angezeigt.');
+        }
+        const originalBeamY = Number(beam.getAttribute('data-y'));
+        const beamPath = beam.querySelector<SVGPathElement>('.note-beam');
+        const firstStem = firstNote.querySelector<SVGLineElement>('.note-stem');
+        if (!beamPath || !firstStem) {
+          throw new Error('Balkenpfad oder Notenstiel wurde nicht angezeigt.');
+        }
+        const originalBeamX = Number(beamPath.getAttribute('d')?.match(/^M ([\d.-]+)/)?.[1]);
+        const originalStemX = Number(firstStem.getAttribute('x1'));
+
+        compiled.querySelector<HTMLButtonElement>(
+          '[aria-label="Auswahlbalken leicht versetzen"]',
+        )?.click();
+        fixture.detectChanges();
+        expect(Number(beam.getAttribute('data-y'))).toBe(originalBeamY + 3);
+        expect(Number(beamPath.getAttribute('d')?.match(/^M ([\d.-]+)/)?.[1])).toBe(
+          originalBeamX + 3,
+        );
+        expect(Number(firstStem.getAttribute('x1'))).toBe(originalStemX + 3);
+        expect([firstNote, secondNote].map((note) => note.getAttribute('transform'))).toEqual(
+          originalTransforms,
+        );
+
+        compiled.querySelector<HTMLButtonElement>(
+          '[aria-label="Balkenversatz zurücksetzen"]',
+        )?.click();
+        fixture.detectChanges();
+        expect(Number(beam.getAttribute('data-y'))).toBe(originalBeamY);
+        expect(Number(beamPath.getAttribute('d')?.match(/^M ([\d.-]+)/)?.[1])).toBe(
+          originalBeamX,
+        );
+        expect(Number(firstStem.getAttribute('x1'))).toBe(originalStemX);
+      });
+
   it('draws note stems and beams downward and persists the direction', async () => {
     const fixture = TestBed.createComponent(ScoreEditorComponent);
     await fixture.whenStable();

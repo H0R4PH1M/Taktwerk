@@ -90,4 +90,29 @@ describe('layoutScoreMeasure', () => {
       'manual-beam-manual-1',
     ]);
   });
+
+  it('slightly offsets beams from different instruments on the same beat', () => {
+    const pattern = createPattern();
+    pattern.kick[0].push(
+      { id: 'kick-one', start: 0, duration: 16 },
+      { id: 'kick-two', start: 4, duration: 16 },
+    );
+    pattern.snare[0].push(
+      { id: 'snare-one', start: 8, duration: 16 },
+      { id: 'snare-two', start: 12, duration: 16 },
+    );
+
+    const result = layout(pattern);
+    const offsets = result.beams.map((beam) => {
+      const note = result.notes.find((fragment) => fragment.instrumentId === beam.instrumentId);
+      if (!note) {
+        throw new Error('Instrumentnote wurde nicht angelegt.');
+      }
+      const baseY = note.y + (beam.direction === 'down' ? 34 : -34);
+      return beam.y - baseY;
+    });
+
+    expect(offsets.some((offset) => offset !== 0)).toBe(true);
+    expect(offsets.every((offset) => Math.abs(offset) <= 3)).toBe(true);
+  });
 });

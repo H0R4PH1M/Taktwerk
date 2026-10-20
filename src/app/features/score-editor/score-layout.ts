@@ -72,6 +72,8 @@ function notesForMeasure(options: ScoreLayoutOptions): ScoreFragment[] {
             x,
             y,
             duration: note.duration,
+            beamOffset: note.beamOffset,
+            beamOffsetX: note.beamOffsetX,
             manualBeamGroupId: note.manualBeamGroupId,
             stemDirection: note.stemDirection ?? options.stemDirection,
             filledHead: note.duration >= 4,
@@ -129,6 +131,8 @@ function notesForMeasure(options: ScoreLayoutOptions): ScoreFragment[] {
             x,
             y,
             duration: part.duration,
+            beamOffset: note.beamOffset,
+            beamOffsetX: note.beamOffsetX,
             manualBeamGroupId: note.manualBeamGroupId,
             stemDirection: note.stemDirection ?? options.stemDirection,
             filledHead: part.duration >= 4,
@@ -172,6 +176,8 @@ function beamNotesForMeasure(
       const key = [
         note.instrumentId,
         note.duration,
+        note.beamOffset ?? 0,
+        note.beamOffsetX ?? 0,
         beatIndex,
         note.stemDirection,
         note.tupletId ?? 'regular',
@@ -182,7 +188,14 @@ function beamNotesForMeasure(
     }
   }
 
-  const pendingBeams: Array<ScoreBeamMarker & { beatIndex: number; noteIds: string[] }> = [];
+  const pendingBeams: Array<
+    ScoreBeamMarker & {
+      beatIndex: number;
+      noteIds: string[];
+      beamOffset: number;
+      beamOffsetX: number;
+    }
+  > = [];
   const addBeam = (group: ScoreFragment[], beatIndex: number, manualGroupId?: string) => {
     if (group.length < 2) {
       return;
@@ -199,9 +212,11 @@ function beamNotesForMeasure(
       noteIds: group.map((note) => note.id),
       instrumentId: first.instrumentId,
       levels: first.flagCount,
-      xStart: first.x + stemX,
-      xEnd: last.x + stemX,
+      xStart: first.x + stemX + (first.beamOffsetX ?? 0),
+      xEnd: last.x + stemX + (last.beamOffsetX ?? 0),
       y: first.y + (direction === 'down' ? 34 : -34),
+      beamOffset: first.beamOffset ?? 0,
+      beamOffsetX: first.beamOffsetX ?? 0,
       tupletId: first.tupletId,
       tupletCount: first.tupletCount,
       tupletInTimeOf: first.tupletInTimeOf,
@@ -255,6 +270,7 @@ function beamNotesForMeasure(
           note.instrumentId === first.instrumentId &&
           note.duration === first.duration &&
           note.stemDirection === first.stemDirection &&
+          note.beamOffsetX === first.beamOffsetX &&
           (index === 0 || Math.abs(note.measureStep - (group[index - 1].measureStep + spacing)) < 1e-7),
       );
     if (!isValidGroup) {
@@ -264,9 +280,38 @@ function beamNotesForMeasure(
     addBeam(group, beatIndex, groupId);
   }
 
-  const beamedNotes = new Map<string, { id: string; stemOffset: number }>();
+  const beamedNotes = new Map<
+    string,
+    { id: string; stemOffset: number; stemXOffset: number }
+  >();
   const placedBeams: Array<ScoreBeamMarker & { beatIndex: number }> = [];
   const beams: ScoreBeamMarker[] = [];
+  const instrumentsByBeat = new Map<number, Map<ScoreBeamMarker['instrumentId'], number>>();
+  for (const candidate of pendingBeams) {
+    const hasSeparateInstrumentBeam = pendingBeams.some(
+      (other) =>
+        other.beatIndex === candidate.beatIndex &&
+        other.instrumentId !== candidate.instrumentId &&
+        (candidate.xEnd <= other.xStart || candidate.xStart >= other.xEnd),
+    );
+    if (!hasSeparateInstrumentBeam) {
+      continue;
+    }
+    const instruments = instrumentsByBeat.get(candidate.beatIndex) ?? new Map();
+    const currentY = instruments.get(candidate.instrumentId);
+    instruments.set(candidate.instrumentId, currentY === undefined ? candidate.y : Math.min(currentY, candidate.y));
+    instrumentsByBeat.set(candidate.beatIndex, instruments);
+  }
+  const instrumentOffsets = new Map<string, number>();
+  for (const [beatIndex, instruments] of instrumentsByBeat) {
+    const ordered = [...instruments.entries()].sort(
+      ([leftId, leftY], [rightId, rightY]) => leftY - rightY || leftId.localeCompare(rightId),
+    );
+    const center = (ordered.length - 1) / 2;
+    ordered.forEach(([instrumentId], index) => {
+      instrumentOffsets.set(`${beatIndex}:${instrumentId}`, (index - center) * 3);
+    });
+  }
   pendingBeams.sort(
     (left, right) =>
       left.beatIndex - right.beatIndex ||
@@ -275,7 +320,10 @@ function beamNotesForMeasure(
       left.xStart - right.xStart,
   );
   for (const candidate of pendingBeams) {
-    let y = candidate.y;
+    let y =
+      candidate.y +
+      (instrumentOffsets.get(`${candidate.beatIndex}:${candidate.instrumentId}`) ?? 0) +
+      candidate.beamOffset;
     const beamHeight = (candidate.levels - 1) * 5 + 3;
     const candidateHasTupletLabel = candidate.tupletIndexStart === 0;
     for (const previous of placedBeams) {
@@ -327,7 +375,11 @@ function beamNotesForMeasure(
       tupletIndexStart: placed.tupletIndexStart,
     });
     for (const noteId of placed.noteIds) {
-      beamedNotes.set(noteId, { id: placed.id, stemOffset });
+      beamedNotes.set(noteId, {
+        id: placed.id,
+        stemOffset,
+        stemXOffset: placed.beamOffsetX,
+      });
     }
   }
 
@@ -335,7 +387,12 @@ function beamNotesForMeasure(
     notes: notes.map((note) => {
       const beam = beamedNotes.get(note.id);
       return beam
-        ? { ...note, beamGroupId: beam.id, beamStemOffset: beam.stemOffset }
+        ? {
+            ...note,
+            beamGroupId: beam.id,
+            beamStemOffset: beam.stemOffset,
+            beamStemXOffset: beam.stemXOffset,
+          }
         : note;
     }),
     beams,
