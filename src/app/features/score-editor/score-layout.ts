@@ -267,7 +267,6 @@ function beamNotesForMeasure(
       group.length >= 2 &&
       group.every(
         (note, index) =>
-          note.instrumentId === first.instrumentId &&
           note.duration === first.duration &&
           note.stemDirection === first.stemDirection &&
           note.beamOffsetX === first.beamOffsetX &&
@@ -279,7 +278,6 @@ function beamNotesForMeasure(
     const beatIndex = Math.floor(first.measureStep / beatLength);
     addBeam(group, beatIndex, groupId);
   }
-
   const beamedNotes = new Map<
     string,
     { id: string; stemOffset: number; stemXOffset: number }
@@ -319,6 +317,7 @@ function beamNotesForMeasure(
       right.levels - left.levels ||
       left.xStart - right.xStart,
   );
+  const notesById = new Map(notes.map((note) => [note.id, note] as const));
   for (const candidate of pendingBeams) {
     let y =
       candidate.y +
@@ -326,39 +325,46 @@ function beamNotesForMeasure(
       candidate.beamOffset;
     const beamHeight = (candidate.levels - 1) * 5 + 3;
     const candidateHasTupletLabel = candidate.tupletIndexStart === 0;
-    for (const previous of placedBeams) {
-      if (
-        previous.beatIndex !== candidate.beatIndex ||
-        candidate.xStart >= previous.xEnd ||
-        candidate.xEnd <= previous.xStart
-      ) {
-        continue;
-      }
-      const previousHasTupletLabel = previous.tupletIndexStart === 0;
-      const previousLabelOffset = previousHasTupletLabel ? 11 : 0;
-      const currentLabelOffset = candidateHasTupletLabel ? 11 : 0;
-      const previousHeight = (previous.levels - 1) * 5 + 3;
-      const previousTop =
-        previous.direction === 'down'
-          ? previous.y - previousHeight
-          : previous.y - previousLabelOffset;
-      const previousBottom =
-        previous.direction === 'down'
-          ? previous.y + previousLabelOffset
-          : previous.y + previousHeight;
-      const currentTop =
-        candidate.direction === 'down' ? y - beamHeight : y - currentLabelOffset;
-      const currentBottom =
-        candidate.direction === 'down' ? y + currentLabelOffset : y + beamHeight;
-      if (currentTop < previousBottom + 2 && currentBottom > previousTop - 2) {
-        y =
-          previousBottom +
-          2 +
-          (candidate.direction === 'down' ? beamHeight : currentLabelOffset);
-      }
+    const bounds = (direction: StemDirection, beamY: number, height: number, hasLabel: boolean) => ({
+      top: direction === 'down' ? beamY - height : beamY - (hasLabel ? 11 : 0),
+      bottom: direction === 'down' ? beamY + (hasLabel ? 11 : 0) : beamY + height,
+    });
+    const collides = () => {
+      const current = bounds(
+        candidate.direction,
+        y,
+        beamHeight,
+        candidateHasTupletLabel,
+      );
+      const noteCollision = notes.some((note) => {
+        if (
+          candidate.noteIds.includes(note.id) ||
+          candidate.xStart > note.x + 6 ||
+          candidate.xEnd < note.x - 6
+        ) {
+          return false;
+        }
+        return current.top < note.y + 6 && current.bottom > note.y - 6;
+      });
+      const beamCollision = placedBeams.some((previous) => {
+        if (candidate.xStart > previous.xEnd || candidate.xEnd < previous.xStart) {
+          return false;
+        }
+        const previousBounds = bounds(
+          previous.direction,
+          previous.y,
+          (previous.levels - 1) * 5 + 3,
+          previous.tupletIndexStart === 0,
+        );
+        return current.top < previousBounds.bottom + 2 && current.bottom > previousBounds.top - 2;
+      });
+      return noteCollision || beamCollision;
+    };
+    const offsetDirection = candidate.direction === 'down' ? 1 : -1;
+    while (collides()) {
+      y += offsetDirection * 2;
     }
 
-    const stemOffset = y - candidate.y;
     const placed = { ...candidate, y };
     placedBeams.push(placed);
     beams.push({
@@ -375,9 +381,13 @@ function beamNotesForMeasure(
       tupletIndexStart: placed.tupletIndexStart,
     });
     for (const noteId of placed.noteIds) {
+      const note = notesById.get(noteId);
+      if (!note) {
+        continue;
+      }
       beamedNotes.set(noteId, {
         id: placed.id,
-        stemOffset,
+        stemOffset: y - note.y - (note.stemDirection === 'down' ? 34 : -34),
         stemXOffset: placed.beamOffsetX,
       });
     }

@@ -1009,7 +1009,7 @@ describe('ScoreEditorComponent', () => {
     ).toBe(false);
   });
 
-      it('manually connects and disconnects adjacent notes on the same instrument', async () => {
+      it('manually connects and disconnects adjacent notes on different instruments', async () => {
         const fixture = TestBed.createComponent(ScoreEditorComponent);
         await fixture.whenStable();
         const compiled = fixture.nativeElement as HTMLElement;
@@ -1035,22 +1035,30 @@ describe('ScoreEditorComponent', () => {
         autoBeaming.dispatchEvent(new Event('change', { bubbles: true }));
         floorTomPicker.click();
         selectNoteValue(fixture, 'Achtelnote');
-        for (const step of [0, 8]) {
-          compiled
-            .querySelector<SVGRectElement>(`.placement-target[data-step="${step}"]`)
-            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-          fixture.detectChanges();
-        }
+        compiled
+          .querySelector<SVGRectElement>('.placement-target[data-step="0"]')
+          ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        fixture.detectChanges();
+        compiled.querySelector<HTMLButtonElement>(
+          '[aria-label="Instrument Snare auswählen"]',
+        )?.click();
+        compiled
+          .querySelector<SVGRectElement>('.placement-target[data-step="8"]')
+          ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        fixture.detectChanges();
 
         selectSelectionTool(fixture);
-        const notes = compiled.querySelectorAll<SVGGElement>(
+        const floorTomNote = compiled.querySelector<SVGGElement>(
           '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="floorTom"]',
         );
-        if (notes.length !== 2) {
-          throw new Error('Die beiden Floortom-Noten wurden nicht angezeigt.');
+        const snareNote = compiled.querySelector<SVGGElement>(
+          '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="snare"]',
+        );
+        if (!floorTomNote || !snareNote) {
+          throw new Error('Die Floortom- und Snare-Noten wurden nicht angezeigt.');
         }
-        notes[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
-        notes[1].dispatchEvent(new MouseEvent('click', { bubbles: true, ctrlKey: true }));
+        floorTomNote.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        snareNote.dispatchEvent(new MouseEvent('click', { bubbles: true, ctrlKey: true }));
         fixture.detectChanges();
 
         const connectButton = compiled.querySelector<HTMLButtonElement>(
@@ -1059,20 +1067,18 @@ describe('ScoreEditorComponent', () => {
         expect(connectButton).toBeTruthy();
         connectButton?.click();
         fixture.detectChanges();
-        const groupIds = Array.from(
-          compiled.querySelectorAll<SVGGElement>(
-            '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="floorTom"]',
-          ),
-        ).map((note) => note.getAttribute('data-beam-group-id'));
-        expect(groupIds[0]).toBeTruthy();
-        expect(groupIds[0]).toBe(groupIds[1]);
+        const floorTomGroupId = floorTomNote.getAttribute('data-beam-group-id');
+        expect(floorTomGroupId).toBeTruthy();
+        expect(snareNote.getAttribute('data-beam-group-id')).toBe(floorTomGroupId);
+        expect(Number(floorTomNote.getAttribute('data-beam-stem-offset'))).toBe(0);
+        expect(Number(snareNote.getAttribute('data-beam-stem-offset'))).toBe(24);
         expect(compiled.querySelectorAll('.score-beam[data-instrument="floorTom"]')).toHaveLength(1);
 
         compiled.querySelector<HTMLButtonElement>(
           '[aria-label="Manuelle Notenverbindung lösen"]',
         )?.click();
         fixture.detectChanges();
-        expect(compiled.querySelectorAll('.score-beam[data-instrument="floorTom"]')).toHaveLength(0);
+        expect(compiled.querySelectorAll('.score-beam')).toHaveLength(0);
       });
 
       it('manually connects sixteenth notes in a 7/8 measure', async () => {
@@ -1299,7 +1305,7 @@ describe('ScoreEditorComponent', () => {
     expect(compiled.querySelector('.selection-count')?.textContent).toContain('1 Note ausgewählt');
 
     compiled.querySelector<HTMLButtonElement>(
-      '[aria-label="Auswahl nach unten ausrichten"]',
+      '[aria-label="Balken unter den Noten"]',
     )?.click();
     fixture.detectChanges();
     expect(selectedNote.querySelector('.note-stem')?.getAttribute('x1')).toBe('-5');
@@ -1648,17 +1654,18 @@ describe('ScoreEditorComponent', () => {
     }
     const crashTop = Number(crashBeam.getAttribute('data-y'));
     const crashBottom = crashTop + (Number(crashBeam.getAttribute('data-levels')) - 1) * 5 + 3;
-    expect(Number(openHatBeam.getAttribute('data-y'))).toBeGreaterThanOrEqual(crashBottom + 2);
-    expect(
-      compiled.querySelector(
-        '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="openHat"] .note-stem',
-      )?.getAttribute('y2'),
-    ).toBe('-29');
-    expect(
-      compiled.querySelector(
-        '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="openHat"]',
-      )?.getAttribute('data-beam-stem-offset'),
-    ).toBe('5');
+    const openHatTop = Number(openHatBeam.getAttribute('data-y'));
+    const openHatBottom =
+      openHatTop + (Number(openHatBeam.getAttribute('data-levels')) - 1) * 5 + 3;
+    expect(openHatBottom).toBeLessThanOrEqual(crashTop - 2);
+    const openHatNote = compiled.querySelector<SVGGElement>(
+      '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="openHat"]',
+    );
+    const openHatStemOffset = Number(openHatNote?.getAttribute('data-beam-stem-offset'));
+    expect(openHatNote?.querySelector('.note-stem')?.getAttribute('y2')).toBe(
+      String(-34 + openHatStemOffset),
+    );
+    expect(openHatStemOffset).toBe(openHatTop - 10);
   });
 
   it('places a configurable 5:4 tuplet at consecutive proportional positions', async () => {

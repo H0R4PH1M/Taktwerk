@@ -399,25 +399,25 @@
       </button>
       </div>
       @if (selectedNoteCount() > 0) {
-        <div class="selection-direction-controls" role="group" aria-label="Richtung der Notenauswahl">
+        <div class="selection-direction-controls" role="group" aria-label="Balkenposition der Notenauswahl">
           <span class="selection-count" aria-live="polite">
             {{ selectedNoteCount() }} {{ selectedNoteCount() === 1 ? 'Note' : 'Noten' }} ausgewählt
           </span>
           <button
             class="text-mode-option"
             type="button"
-            aria-label="Auswahl nach oben ausrichten"
+            aria-label="Balken über den Noten"
             (click)="selectedStemDirectionChanged.emit('up')"
           >
-            Nach oben
+            Balken über den Noten
           </button>
           <button
             class="text-mode-option"
             type="button"
-            aria-label="Auswahl nach unten ausrichten"
+            aria-label="Balken unter den Noten"
             (click)="selectedStemDirectionChanged.emit('down')"
           >
-            Nach unten
+            Balken unter den Noten
           </button>
         </div>
       }

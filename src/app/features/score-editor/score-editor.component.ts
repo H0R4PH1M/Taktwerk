@@ -1194,7 +1194,7 @@ export class ScoreEditorComponent implements OnDestroy {
   protected connectSelectedNotesManually(): void {
     const selected = this.selectedBeamNotes();
     if (!this.isValidManualBeamSelection(selected)) {
-      this.message.set('Wähle zwei benachbarte Noten gleichen Werts desselben Instruments aus.');
+      this.message.set('Wähle zwei benachbarte Noten gleichen Werts und gleicher Stielrichtung aus.');
       return;
     }
     const groupId = this.createManualBeamGroupId();
@@ -2564,7 +2564,6 @@ export class ScoreEditorComponent implements OnDestroy {
         this.stepsPerMeasure() &&
       ordered.every(
         (current, index) =>
-          current.instrumentId === first.instrumentId &&
           current.measureIndex === first.measureIndex &&
           current.note.duration === first.note.duration &&
           (current.note.stemDirection ?? this.stemDirection()) ===

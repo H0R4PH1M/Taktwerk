@@ -115,4 +115,34 @@ describe('layoutScoreMeasure', () => {
     expect(offsets.some((offset) => offset !== 0)).toBe(true);
     expect(offsets.every((offset) => Math.abs(offset) <= 3)).toBe(true);
   });
+
+  it('moves upward beams clear of other instrument noteheads', () => {
+    const pattern = createPattern();
+    pattern.snare[0].push(
+      { id: 'snare-one', start: 0, duration: 8, stemDirection: 'up' },
+      { id: 'snare-two', start: 8, duration: 8, stemDirection: 'up' },
+    );
+    pattern.openHat[0].push({ id: 'hat-hit', start: 4, duration: 4 });
+
+    const result = layout(pattern);
+    const beam = result.beams[0];
+
+    expect(beam.direction).toBe('up');
+    expect(beam.y + 3).toBeLessThan(44 - 4);
+  });
+
+  it('moves downward beams clear of other instrument noteheads', () => {
+    const pattern = createPattern();
+    pattern.tom1[0].push(
+      { id: 'tom-one', start: 0, duration: 8, stemDirection: 'down' },
+      { id: 'tom-two', start: 8, duration: 8, stemDirection: 'down' },
+    );
+    pattern.floorTom[0].push({ id: 'floor-hit', start: 4, duration: 4 });
+
+    const result = layout(pattern);
+    const beam = result.beams[0];
+
+    expect(beam.direction).toBe('down');
+    expect(beam.y - 3).toBeGreaterThan(100 + 4);
+  });
 });
