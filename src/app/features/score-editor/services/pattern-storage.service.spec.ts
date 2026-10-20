@@ -33,6 +33,31 @@ describe('PatternStorageService', () => {
     expect(imported.measures).toBe(1);
   });
 
+  it('imports patterns with more than four measures', () => {
+    const service = new PatternStorageService();
+    const tracks = Object.fromEntries(
+      DRUM_INSTRUMENTS.map(({ id }) => [id, Array.from({ length: 5 }, () => [])]),
+    );
+
+    const imported = service.importJson(
+      JSON.stringify({
+        tempo: 112,
+        measures: 5,
+        numerator: 4,
+        denominator: 4,
+        pattern: tracks,
+        rests: tracks,
+        annotations: Array.from({ length: 5 }, () => []),
+      }),
+      DRUM_INSTRUMENTS,
+      NOTE_VALUES,
+      TIME_SIGNATURE_DENOMINATORS,
+      () => 'note-imported',
+    );
+
+    expect(imported.measures).toBe(5);
+  });
+
   it('rejects invalid JSON', () => {
     const service = new PatternStorageService();
 

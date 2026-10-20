@@ -78,6 +78,8 @@ export class EditorToolboxComponent {
   readonly selectedNoteCount = input.required<number>();
   readonly selectedObjectCount = input.required<number>();
   readonly editingSelection = input.required<boolean>();
+  readonly canManuallyConnectNotes = input.required<boolean>();
+  readonly canManuallyDisconnectNotes = input.required<boolean>();
   readonly clipboardAvailable = input.required<boolean>();
   readonly pastePending = input.required<boolean>();
   readonly selectedNoteEdit = input<SelectionNoteEdit | null>(null);
@@ -99,6 +101,8 @@ export class EditorToolboxComponent {
   readonly selectionEditToggled = output<void>();
   readonly selectedObjectsDeleted = output<void>();
   readonly selectedObjectsCopied = output<void>();
+  readonly manualBeamConnectRequested = output<void>();
+  readonly manualBeamDisconnectRequested = output<void>();
   readonly pasteRequested = output<void>();
   readonly noteEditChanged = output<NoteEditChange>();
   readonly annotationTextChanged = output<string>();

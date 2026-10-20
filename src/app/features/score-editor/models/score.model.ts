@@ -24,6 +24,7 @@ export interface DrumNote {
   id: string;
   start: number;
   duration: NoteValue;
+  manualBeamGroupId?: string;
   stemDirection?: StemDirection;
   tuplet?: {
     id: string;
@@ -69,6 +70,7 @@ export interface ScoreFragment {
   flagCount: number;
   beamGroupId?: string;
   beamStemOffset?: number;
+  manualBeamGroupId?: string;
   tupletId?: string;
   tupletCount?: number;
   tupletInTimeOf?: number;

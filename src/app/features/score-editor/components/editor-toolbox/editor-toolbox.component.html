@@ -348,6 +348,26 @@
       >
         Kopieren
       </button>
+      @if (canManuallyConnectNotes()) {
+        <button
+          class="text-mode-option"
+          type="button"
+          aria-label="Noten manuell verbinden"
+          (click)="manualBeamConnectRequested.emit()"
+        >
+          Manuell verbinden
+        </button>
+      }
+      @if (canManuallyDisconnectNotes()) {
+        <button
+          class="text-mode-option"
+          type="button"
+          aria-label="Manuelle Notenverbindung lösen"
+          (click)="manualBeamDisconnectRequested.emit()"
+        >
+          Verbindung lösen
+        </button>
+      }
       <button
         class="text-mode-option"
         type="button"
@@ -392,7 +412,7 @@
         </div>
       }
       <span class="selection-hint">
-        Strg-Klick wählt weitere Objekte; Ziehen im Notenblatt wählt einen Bereich.
+        Strg-Klick wählt weitere Objekte; zwei benachbarte Noten gleichen Werts desselben Instruments lassen sich manuell verbinden.
       </span>
     @if (editingSelection() && selectedNoteEdit(); as note) {
       <div class="selection-editor" role="group" aria-label="Note bearbeiten">
@@ -429,7 +449,6 @@
               aria-label="Takt der ausgewählten Note"
               type="number"
               min="1"
-              max="4"
               step="1"
               [value]="note.measureIndex + 1"
               (change)="emitNoteEdit('measureIndex', $event)"

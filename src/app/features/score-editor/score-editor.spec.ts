@@ -1009,6 +1009,72 @@ describe('ScoreEditorComponent', () => {
     ).toBe(false);
   });
 
+      it('manually connects and disconnects adjacent notes on the same instrument', async () => {
+        const fixture = TestBed.createComponent(ScoreEditorComponent);
+        await fixture.whenStable();
+        const compiled = fixture.nativeElement as HTMLElement;
+        compiled.querySelector<HTMLButtonElement>('.clear-button')?.click();
+        fixture.detectChanges();
+
+        const advancedTools = compiled.querySelector<HTMLDetailsElement>('.advanced-tools');
+        if (!advancedTools) {
+          throw new Error('Erweiterte Werkzeuge wurden nicht angezeigt.');
+        }
+        advancedTools.open = true;
+        fixture.detectChanges();
+        const autoBeaming = compiled.querySelector<HTMLInputElement>(
+          '[aria-label="Noten automatisch verbinden"]',
+        );
+        const floorTomPicker = compiled.querySelector<HTMLButtonElement>(
+          '[aria-label="Instrument Floortom auswählen"]',
+        );
+        if (!autoBeaming || !floorTomPicker) {
+          throw new Error('Notenverbindung oder Instrumentauswahl wurde nicht angezeigt.');
+        }
+        autoBeaming.checked = false;
+        autoBeaming.dispatchEvent(new Event('change', { bubbles: true }));
+        floorTomPicker.click();
+        selectNoteValue(fixture, 'Achtelnote');
+        for (const step of [0, 8]) {
+          compiled
+            .querySelector<SVGRectElement>(`.placement-target[data-step="${step}"]`)
+            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          fixture.detectChanges();
+        }
+
+        selectSelectionTool(fixture);
+        const notes = compiled.querySelectorAll<SVGGElement>(
+          '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="floorTom"]',
+        );
+        if (notes.length !== 2) {
+          throw new Error('Die beiden Floortom-Noten wurden nicht angezeigt.');
+        }
+        notes[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        notes[1].dispatchEvent(new MouseEvent('click', { bubbles: true, ctrlKey: true }));
+        fixture.detectChanges();
+
+        const connectButton = compiled.querySelector<HTMLButtonElement>(
+          '[aria-label="Noten manuell verbinden"]',
+        );
+        expect(connectButton).toBeTruthy();
+        connectButton?.click();
+        fixture.detectChanges();
+        const groupIds = Array.from(
+          compiled.querySelectorAll<SVGGElement>(
+            '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="floorTom"]',
+          ),
+        ).map((note) => note.getAttribute('data-beam-group-id'));
+        expect(groupIds[0]).toBeTruthy();
+        expect(groupIds[0]).toBe(groupIds[1]);
+        expect(compiled.querySelectorAll('.score-beam[data-instrument="floorTom"]')).toHaveLength(1);
+
+        compiled.querySelector<HTMLButtonElement>(
+          '[aria-label="Manuelle Notenverbindung lösen"]',
+        )?.click();
+        fixture.detectChanges();
+        expect(compiled.querySelectorAll('.score-beam[data-instrument="floorTom"]')).toHaveLength(0);
+      });
+
   it('draws note stems and beams downward and persists the direction', async () => {
     const fixture = TestBed.createComponent(ScoreEditorComponent);
     await fixture.whenStable();
@@ -1546,7 +1612,7 @@ describe('ScoreEditorComponent', () => {
     ).toBe('Triol');
   });
 
-  it('adds another measure to the score', async () => {
+  it('adds more than four measures to the score', async () => {
     const fixture = TestBed.createComponent(ScoreEditorComponent);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
@@ -1554,11 +1620,13 @@ describe('ScoreEditorComponent', () => {
       button.textContent?.includes('+ Takt'),
     );
 
-    addMeasureButton?.click();
-    fixture.detectChanges();
+    for (let index = 0; index < 4; index++) {
+      addMeasureButton?.click();
+      fixture.detectChanges();
+    }
 
-    expect(compiled.querySelectorAll('.measure-sheet')).toHaveLength(3);
-    expect(compiled.querySelector('.measure-controls')?.textContent).toContain('3 Takte');
+    expect(compiled.querySelectorAll('.measure-sheet')).toHaveLength(6);
+    expect(compiled.querySelector('.measure-controls')?.textContent).toContain('6 Takte');
   });
 
   it('adapts the score and restores a saved time signature', async () => {

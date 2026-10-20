@@ -168,7 +168,6 @@ export class PatternStorageService {
       typeof saved.measures !== 'number' ||
       !Number.isInteger(saved.measures) ||
       saved.measures < 1 ||
-      saved.measures > 4 ||
       typeof numerator !== 'number' ||
       !Number.isInteger(numerator) ||
       numerator < 1 ||
@@ -289,6 +288,9 @@ export class PatternStorageService {
                 note.start < 0 ||
                 note.start >= stepsPerMeasure ||
                 (note.tuplet === undefined && !Number.isInteger(note.start)) ||
+                (note.manualBeamGroupId !== undefined &&
+                  (typeof note.manualBeamGroupId !== 'string' ||
+                    note.manualBeamGroupId.length === 0)) ||
                 (note.stemDirection !== undefined &&
                   note.stemDirection !== 'up' &&
                   note.stemDirection !== 'down') ||

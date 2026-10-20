@@ -73,4 +73,21 @@ describe('layoutScoreMeasure', () => {
     expect(result.beams).toEqual([]);
     expect(result.notes.every((note) => note.beamGroupId === undefined)).toBe(true);
   });
+
+  it('renders manually connected notes when automatic beaming is disabled', () => {
+    const pattern = createPattern();
+    pattern.closedHat[0].push(
+      { id: 'hat-one', start: 0, duration: 8, manualBeamGroupId: 'manual-1' },
+      { id: 'hat-two', start: 8, duration: 8, manualBeamGroupId: 'manual-1' },
+    );
+
+    const result = layout(pattern, 0, false);
+
+    expect(result.beams).toHaveLength(1);
+    expect(result.beams[0].id).toBe('manual-beam-manual-1');
+    expect(result.notes.map((note) => note.beamGroupId)).toEqual([
+      'manual-beam-manual-1',
+      'manual-beam-manual-1',
+    ]);
+  });
 });

@@ -72,6 +72,7 @@ function notesForMeasure(options: ScoreLayoutOptions): ScoreFragment[] {
             x,
             y,
             duration: note.duration,
+            manualBeamGroupId: note.manualBeamGroupId,
             stemDirection: note.stemDirection ?? options.stemDirection,
             filledHead: note.duration >= 4,
             stemmed: note.duration >= 4,
@@ -128,6 +129,7 @@ function notesForMeasure(options: ScoreLayoutOptions): ScoreFragment[] {
             x,
             y,
             duration: part.duration,
+            manualBeamGroupId: note.manualBeamGroupId,
             stemDirection: note.stemDirection ?? options.stemDirection,
             filledHead: part.duration >= 4,
             stemmed: part.duration >= 4,
@@ -152,33 +154,36 @@ function beamNotesForMeasure(
   options: ScoreLayoutOptions,
   notes: ScoreFragment[],
 ): { notes: ScoreFragment[]; beams: ScoreBeamMarker[] } {
-  if (!options.autoBeaming) {
-    return { notes, beams: [] };
-  }
-
   const beatLength =
     (options.ticksPerWholeNote / options.denominator) *
     (options.denominator >= 8 && options.numerator > 3 && options.numerator % 3 === 0 ? 3 : 1);
   const notesByBeat = new Map<string, { beatIndex: number; notes: ScoreFragment[] }>();
-  for (const note of notes) {
-    if (note.duration < 8 || note.tieArcIn || note.tieArcOut) {
-      continue;
+  if (options.autoBeaming) {
+    for (const note of notes) {
+      if (
+        note.duration < 8 ||
+        note.tieArcIn ||
+        note.tieArcOut ||
+        note.manualBeamGroupId
+      ) {
+        continue;
+      }
+      const beatIndex = Math.floor(note.measureStep / beatLength);
+      const key = [
+        note.instrumentId,
+        note.duration,
+        beatIndex,
+        note.stemDirection,
+        note.tupletId ?? 'regular',
+      ].join(':');
+      const group = notesByBeat.get(key) ?? { beatIndex, notes: [] };
+      group.notes.push(note);
+      notesByBeat.set(key, group);
     }
-    const beatIndex = Math.floor(note.measureStep / beatLength);
-    const key = [
-      note.instrumentId,
-      note.duration,
-      beatIndex,
-      note.stemDirection,
-      note.tupletId ?? 'regular',
-    ].join(':');
-    const group = notesByBeat.get(key) ?? { beatIndex, notes: [] };
-    group.notes.push(note);
-    notesByBeat.set(key, group);
   }
 
   const pendingBeams: Array<ScoreBeamMarker & { beatIndex: number; noteIds: string[] }> = [];
-  const addBeam = (group: ScoreFragment[], beatIndex: number) => {
+  const addBeam = (group: ScoreFragment[], beatIndex: number, manualGroupId?: string) => {
     if (group.length < 2) {
       return;
     }
@@ -187,7 +192,9 @@ function beamNotesForMeasure(
     const direction = first.stemDirection;
     const stemX = direction === 'down' ? -5 : 5;
     pendingBeams.push({
-      id: `beam-${options.measureIndex}-${first.eventId}`,
+      id: manualGroupId
+        ? `manual-beam-${manualGroupId}`
+        : `beam-${options.measureIndex}-${first.eventId}`,
       beatIndex,
       noteIds: group.map((note) => note.id),
       instrumentId: first.instrumentId,
@@ -226,6 +233,35 @@ function beamNotesForMeasure(
       consecutive.push(note);
     }
     addBeam(consecutive, beatIndex);
+  }
+
+  const manualGroups = new Map<string, ScoreFragment[]>();
+  for (const note of notes) {
+    if (!note.manualBeamGroupId || note.duration < 8 || note.tieArcIn || note.tieArcOut || note.tupletId) {
+      continue;
+    }
+    const group = manualGroups.get(note.manualBeamGroupId) ?? [];
+    group.push(note);
+    manualGroups.set(note.manualBeamGroupId, group);
+  }
+  for (const [groupId, group] of manualGroups) {
+    group.sort((left, right) => left.measureStep - right.measureStep);
+    const first = group[0];
+    const spacing = options.ticksPerWholeNote / first.duration;
+    const isValidGroup =
+      group.length >= 2 &&
+      group.every(
+        (note, index) =>
+          note.instrumentId === first.instrumentId &&
+          note.duration === first.duration &&
+          note.stemDirection === first.stemDirection &&
+          (index === 0 || Math.abs(note.measureStep - (group[index - 1].measureStep + spacing)) < 1e-7),
+      );
+    if (!isValidGroup) {
+      continue;
+    }
+    const beatIndex = Math.floor(first.measureStep / beatLength);
+    addBeam(group, beatIndex, groupId);
   }
 
   const beamedNotes = new Map<string, { id: string; stemOffset: number }>();

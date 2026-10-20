@@ -71,6 +71,13 @@ interface ClipboardNote {
   duration: NoteValue;
   stemDirection?: StemDirection;
   tuplet?: DrumNote['tuplet'];
+  manualBeamGroupId?: string;
+}
+
+interface LocatedSelectedNote {
+  instrumentId: DrumId;
+  measureIndex: number;
+  note: DrumNote;
 }
 
 interface ClipboardAnnotation {
@@ -183,6 +190,23 @@ export class ScoreEditorComponent implements OnDestroy {
       0,
     );
   });
+  private readonly selectedBeamNotes = computed<LocatedSelectedNote[]>(() => {
+    const selected = new Set(this.selectedNoteIds());
+    return this.instruments.flatMap((instrument) =>
+      this.pattern()[instrument.id].flatMap((measure, measureIndex) =>
+        measure
+          .filter((note) => selected.has(note.id))
+          .map((note) => ({ instrumentId: instrument.id, measureIndex, note })),
+      ),
+    );
+  });
+  protected readonly canManuallyConnectNotes = computed(() =>
+    this.selectedAnnotationIds().length === 0 &&
+    this.isValidManualBeamSelection(this.selectedBeamNotes()),
+  );
+  protected readonly canManuallyDisconnectNotes = computed(() =>
+    this.selectedBeamNotes().some(({ note }) => note.manualBeamGroupId !== undefined),
+  );
   protected readonly annotationInput = signal('');
   protected readonly ticksPerWholeNote = computed(() =>
     Math.max(64, this.timeSignatureDenominator()),
@@ -223,6 +247,7 @@ export class ScoreEditorComponent implements OnDestroy {
   private restIdCounter = 0;
   private annotationIdCounter = 0;
   private tupletIdCounter = 0;
+  private manualBeamGroupCounter = 0;
   private activeTupletGroup = signal<ActiveTupletGroup | undefined>(undefined);
   protected readonly pattern = signal<Pattern>(this.createStarterPattern());
   protected readonly rests = signal<RestPattern>(this.createEmptyRests(2));
@@ -605,6 +630,7 @@ export class ScoreEditorComponent implements OnDestroy {
             duration: note.duration,
             stemDirection: note.stemDirection,
             tuplet: note.tuplet,
+            manualBeamGroupId: note.manualBeamGroupId,
           });
         }
       });
@@ -686,11 +712,6 @@ export class ScoreEditorComponent implements OnDestroy {
       ),
     );
     const end = Math.max(noteEnd, annotationEnd);
-    if (end > 4 * this.stepsPerMeasure()) {
-      this.message.set('Die Auswahl reicht über die maximal vier dargestellten Takte hinaus.');
-      this.pastePending.set(false);
-      return;
-    }
     const requiredMeasures = Math.max(1, Math.ceil(end / this.stepsPerMeasure()));
     this.recordUndo();
     while (this.measureIndexes().length < requiredMeasures) {
@@ -717,10 +738,14 @@ export class ScoreEditorComponent implements OnDestroy {
     this.clearActiveTupletIfRemoved(replacedIds);
     const newNoteIds = new Map<string, string>();
     const tupletIds = new Map<string, string>();
+    const manualBeamGroupIds = new Map<string, string>();
     for (const note of notes) {
       newNoteIds.set(note.sourceId, note.id);
       if (note.tuplet && !tupletIds.has(note.tuplet.id)) {
         tupletIds.set(note.tuplet.id, this.createTupletId());
+      }
+      if (note.manualBeamGroupId && !manualBeamGroupIds.has(note.manualBeamGroupId)) {
+        manualBeamGroupIds.set(note.manualBeamGroupId, this.createManualBeamGroupId());
       }
     }
     this.pattern.update((pattern) => {
@@ -737,6 +762,9 @@ export class ScoreEditorComponent implements OnDestroy {
           stemDirection: note.stemDirection ?? this.stemDirection(),
           tuplet: note.tuplet
             ? { ...note.tuplet, id: tupletIds.get(note.tuplet.id) ?? this.createTupletId() }
+            : undefined,
+          manualBeamGroupId: note.manualBeamGroupId
+            ? manualBeamGroupIds.get(note.manualBeamGroupId)
             : undefined,
         });
       }
@@ -827,12 +855,8 @@ export class ScoreEditorComponent implements OnDestroy {
         duration = change.value as NoteValue;
         break;
       case 'measureIndex':
-        if (
-          !Number.isInteger(change.value) ||
-          Number(change.value) < 1 ||
-          Number(change.value) > 4
-        ) {
-          this.message.set('Der Takt muss zwischen 1 und 4 liegen.');
+        if (!Number.isInteger(change.value) || Number(change.value) < 1) {
+          this.message.set('Der Takt muss mindestens 1 sein.');
           return;
         }
         measureIndex = Number(change.value) - 1;
@@ -851,10 +875,6 @@ export class ScoreEditorComponent implements OnDestroy {
     }
     const globalStart = measureIndex * this.stepsPerMeasure() + start;
     const end = globalStart + this.ticksPerWholeNote() / duration;
-    if (end > 4 * this.stepsPerMeasure()) {
-      this.message.set('Diese Notenlänge reicht über die maximal vier dargestellten Takte hinaus.');
-      return;
-    }
     const conflictingNote = this.pattern()[instrumentId].some((measure, otherMeasureIndex) =>
       measure.some((note) => {
         if (note.id === existing.id) {
@@ -1007,6 +1027,55 @@ export class ScoreEditorComponent implements OnDestroy {
     });
   }
 
+  protected connectSelectedNotesManually(): void {
+    const selected = this.selectedBeamNotes();
+    if (!this.isValidManualBeamSelection(selected)) {
+      this.message.set('Wähle zwei benachbarte Noten gleichen Werts desselben Instruments aus.');
+      return;
+    }
+    const groupId = this.createManualBeamGroupId();
+    const selectedIds = new Set(selected.map(({ note }) => note.id));
+    this.recordUndo();
+    this.pattern.update((pattern) => {
+      const updated = {} as Pattern;
+      for (const instrument of this.instruments) {
+        updated[instrument.id] = pattern[instrument.id].map((measure) =>
+          measure.map((note) =>
+            selectedIds.has(note.id) ? { ...note, manualBeamGroupId: groupId } : note,
+          ),
+        );
+      }
+      return updated;
+    });
+    this.message.set('Die Noten sind manuell verbunden.');
+  }
+
+  protected disconnectSelectedNotesManually(): void {
+    const groupIds = new Set(
+      this.selectedBeamNotes()
+        .map(({ note }) => note.manualBeamGroupId)
+        .filter((groupId): groupId is string => groupId !== undefined),
+    );
+    if (groupIds.size === 0) {
+      return;
+    }
+    this.recordUndo();
+    this.pattern.update((pattern) => {
+      const updated = {} as Pattern;
+      for (const instrument of this.instruments) {
+        updated[instrument.id] = pattern[instrument.id].map((measure) =>
+          measure.map((note) =>
+            note.manualBeamGroupId && groupIds.has(note.manualBeamGroupId)
+              ? { ...note, manualBeamGroupId: undefined }
+              : note,
+          ),
+        );
+      }
+      return updated;
+    });
+    this.message.set('Die manuelle Notenverbindung wurde gelöst.');
+  }
+
   protected clearNoteSelection(): void {
     this.selectedNoteIds.set([]);
     this.selectedAnnotationIds.set([]);
@@ -1119,10 +1188,6 @@ export class ScoreEditorComponent implements OnDestroy {
     const end = start + durationTicks;
     const requiredMeasures = Math.ceil(end / this.stepsPerMeasure());
 
-    if (requiredMeasures > 4) {
-      this.message.set('Diese Notenlänge reicht über die maximal vier dargestellten Takte hinaus.');
-      return;
-    }
     const existing = this.pattern()[instrumentId];
     const matchingNote = existing[measureIndex]?.find(
       (note) => note.start === step && note.duration === duration,
@@ -1269,11 +1334,6 @@ export class ScoreEditorComponent implements OnDestroy {
         this.message.set('Die Tuplet-Gruppe muss vollständig in einen Takt passen. Wähle einen früheren Start oder kürzere Noten.');
         return;
       }
-      if (snappedPosition.measureIndex >= 4) {
-        this.message.set('Die Tuplet-Gruppe würde über die maximal vier dargestellten Takte hinausgehen.');
-        return;
-      }
-
       group = {
         id: this.createTupletId(),
         count: this.tupletCount(),
@@ -1345,10 +1405,6 @@ export class ScoreEditorComponent implements OnDestroy {
     const end = start + durationTicks;
     const requiredMeasures = Math.ceil(end / this.stepsPerMeasure());
 
-    if (requiredMeasures > 4) {
-      this.message.set('Diese Pausenlänge reicht über die maximal vier dargestellten Takte hinaus.');
-      return;
-    }
     const existing = this.rests()[instrumentId];
     const matchingRest = existing[measureIndex]?.find(
       (rest) => rest.start === step && rest.duration === duration,
@@ -1401,9 +1457,6 @@ export class ScoreEditorComponent implements OnDestroy {
   }
 
   protected addMeasure(recordHistory = true): void {
-    if (this.measureIndexes().length >= 4) {
-      return;
-    }
     if (recordHistory) {
       this.recordUndo();
     }
@@ -2292,6 +2345,48 @@ export class ScoreEditorComponent implements OnDestroy {
       id = `tuplet-${this.tupletIdCounter}`;
     } while (existingIds.has(id));
     return id;
+  }
+
+  private createManualBeamGroupId(): string {
+    const existingIds = new Set(
+      this.instruments.flatMap((instrument) =>
+        this.pattern()[instrument.id]
+          .flat()
+          .flatMap((note) => (note.manualBeamGroupId ? [note.manualBeamGroupId] : [])),
+      ),
+    );
+    let id: string;
+    do {
+      this.manualBeamGroupCounter += 1;
+      id = `manual-${this.manualBeamGroupCounter}`;
+    } while (existingIds.has(id));
+    return id;
+  }
+
+  private isValidManualBeamSelection(notes: LocatedSelectedNote[]): boolean {
+    if (notes.length !== 2) {
+      return false;
+    }
+    const ordered = [...notes].sort((left, right) => left.note.start - right.note.start);
+    const [first, second] = ordered;
+    return (
+      first.instrumentId === second.instrumentId &&
+      first.measureIndex === second.measureIndex &&
+      first.note.duration >= 8 &&
+      first.note.duration === second.note.duration &&
+      (first.note.stemDirection ?? this.stemDirection()) ===
+        (second.note.stemDirection ?? this.stemDirection()) &&
+      !first.note.tuplet &&
+      !second.note.tuplet &&
+      !first.note.manualBeamGroupId &&
+      !second.note.manualBeamGroupId &&
+      first.note.start + this.ticksPerWholeNote() / first.note.duration <=
+        this.stepsPerMeasure() &&
+      Math.abs(
+        second.note.start -
+          (first.note.start + this.ticksPerWholeNote() / first.note.duration),
+      ) < 1e-7
+    );
   }
 
   private createNoteId(): string {
