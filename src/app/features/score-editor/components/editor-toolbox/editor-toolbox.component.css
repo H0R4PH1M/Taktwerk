@@ -99,18 +99,20 @@
 }
 
 .duration-option {
+  min-width: 63px;
   min-height: 34px;
   padding: 4px 8px;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 2px;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
   color: #60685f;
   cursor: pointer;
-  font: 550 10px var(--font-body);
+  font: 550 9px var(--font-body);
   white-space: nowrap;
 }
 
@@ -247,8 +249,8 @@
   background: #f3f4ee;
 }
 
-.selection-editor > label,
-.selection-editor label {
+.selection-editor label,
+.annotation-editor label {
   min-width: min(180px, 100%);
   display: flex;
   flex: 1 1 180px;
@@ -467,16 +469,6 @@
   background: #eaf1e7;
 }
 
-.annotation-editor label {
-  min-width: min(180px, 100%);
-  display: flex;
-  flex: 1 1 180px;
-  flex-direction: column;
-  gap: 5px;
-  color: #60685f;
-  font-size: 10px;
-}
-
 .text-mode-option {
   min-height: 34px;
   padding: 4px 8px;
@@ -514,13 +506,6 @@
   width: 1px;
   flex: 0 0 1px;
   background: #e5e2d9;
-}
-
-.duration-option {
-  min-width: 63px;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 9px;
 }
 
 .mini-note {
