@@ -1,0 +1,243 @@
+{
+  "title": "Taktwerk Feature-Showcase",
+  "tempo": 112,
+  "numerator": 4,
+  "denominator": 4,
+  "timeSignature": "4/4",
+  "measures": 4,
+  "subdivision": "64tel",
+  "noteTextPosition": "below",
+  "autoBeaming": true,
+  "combineVoices": false,
+  "stemDirection": "up",
+  "pattern": {
+    "kick": [
+      [
+        { "id": "kick-m1-downbeat", "start": 0, "duration": 4 },
+        { "id": "kick-m1-third-beat", "start": 32, "duration": 4 }
+      ],
+      [
+        {
+          "id": "kick-m2-manual-beam-1",
+          "start": 16,
+          "duration": 8,
+          "beamOffset": 2,
+          "beamOffsetX": -1,
+          "beamCollisionSide": "below",
+          "manualBeamGroupId": "kick-manual-m2"
+        },
+        {
+          "id": "kick-m2-manual-beam-2",
+          "start": 24,
+          "duration": 8,
+          "beamOffset": 2,
+          "beamOffsetX": -1,
+          "beamCollisionSide": "below",
+          "manualBeamGroupId": "kick-manual-m2"
+        },
+        { "id": "kick-m2-fourth-beat", "start": 48, "duration": 4 }
+      ],
+      [
+        { "id": "kick-tie-m3-m4", "start": 56, "duration": 4, "stemDirection": "down" }
+      ],
+      [
+        { "id": "kick-m4-downbeat", "start": 0, "duration": 4 },
+        { "id": "kick-m4-second-beat", "start": 16, "duration": 4 },
+        { "id": "kick-m4-last-beat", "start": 48, "duration": 4 }
+      ]
+    ],
+    "snare": [
+      [
+        { "id": "snare-m1-backbeat-2", "start": 16, "duration": 4, "stemDirection": "down" },
+        { "id": "snare-m1-backbeat-4", "start": 48, "duration": 4, "stemDirection": "down" }
+      ],
+      [
+        {
+          "id": "snare-m2-triplet-0",
+          "start": 0,
+          "duration": 8,
+          "tuplet": { "id": "triplet-m2-snare", "count": 3, "inTimeOf": 2, "index": 0 }
+        },
+        {
+          "id": "snare-m2-triplet-1",
+          "start": 5.333333333333333,
+          "duration": 8,
+          "tuplet": { "id": "triplet-m2-snare", "count": 3, "inTimeOf": 2, "index": 1 }
+        },
+        {
+          "id": "snare-m2-triplet-2",
+          "start": 10.666666666666666,
+          "duration": 8,
+          "tuplet": { "id": "triplet-m2-snare", "count": 3, "inTimeOf": 2, "index": 2 }
+        },
+        { "id": "snare-m2-quarter", "start": 32, "duration": 4 }
+      ],
+      [
+        { "id": "snare-m3-eighth-1", "start": 16, "duration": 8 },
+        { "id": "snare-m3-eighth-2", "start": 24, "duration": 8 }
+      ],
+      [
+        { "id": "snare-m4-sixteenth-1", "start": 32, "duration": 16 },
+        { "id": "snare-m4-sixteenth-2", "start": 36, "duration": 16 },
+        { "id": "snare-m4-sixteenth-3", "start": 40, "duration": 16 },
+        { "id": "snare-m4-sixteenth-4", "start": 44, "duration": 16 }
+      ]
+    ],
+    "closedHat": [
+      [
+        { "id": "closedhat-m1-1", "start": 0, "duration": 8 },
+        { "id": "closedhat-m1-2", "start": 8, "duration": 8 },
+        { "id": "closedhat-m1-3", "start": 16, "duration": 8 },
+        { "id": "closedhat-m1-4", "start": 24, "duration": 8 },
+        { "id": "closedhat-m1-5", "start": 32, "duration": 8 },
+        { "id": "closedhat-m1-6", "start": 40, "duration": 8 },
+        { "id": "closedhat-m1-7", "start": 48, "duration": 8 },
+        { "id": "closedhat-m1-8", "start": 56, "duration": 8 }
+      ],
+      [
+        { "id": "closedhat-m2-1", "start": 0, "duration": 16 },
+        { "id": "closedhat-m2-2", "start": 4, "duration": 16 },
+        { "id": "closedhat-m2-3", "start": 8, "duration": 16 },
+        { "id": "closedhat-m2-4", "start": 12, "duration": 16 },
+        { "id": "closedhat-m2-5", "start": 16, "duration": 16 },
+        { "id": "closedhat-m2-6", "start": 20, "duration": 16 },
+        { "id": "closedhat-m2-7", "start": 24, "duration": 16 },
+        { "id": "closedhat-m2-8", "start": 28, "duration": 16 }
+      ],
+      [
+        { "id": "closedhat-m3-1", "start": 0, "duration": 32 },
+        { "id": "closedhat-m3-2", "start": 2, "duration": 32 },
+        { "id": "closedhat-m3-3", "start": 4, "duration": 32 },
+        { "id": "closedhat-m3-4", "start": 6, "duration": 32 },
+        { "id": "closedhat-m3-5", "start": 8, "duration": 32 },
+        { "id": "closedhat-m3-6", "start": 10, "duration": 32 },
+        { "id": "closedhat-m3-7", "start": 12, "duration": 32 },
+        { "id": "closedhat-m3-8", "start": 14, "duration": 32 }
+      ],
+      [
+        { "id": "closedhat-m4-1", "start": 0, "duration": 64 },
+        { "id": "closedhat-m4-2", "start": 1, "duration": 64 },
+        { "id": "closedhat-m4-3", "start": 2, "duration": 64 },
+        { "id": "closedhat-m4-4", "start": 3, "duration": 64 },
+        { "id": "closedhat-m4-5", "start": 4, "duration": 64 },
+        { "id": "closedhat-m4-6", "start": 5, "duration": 64 },
+        { "id": "closedhat-m4-7", "start": 6, "duration": 64 },
+        { "id": "closedhat-m4-8", "start": 7, "duration": 64 }
+      ]
+    ],
+    "openHat": [
+      [
+        { "id": "openhat-m1-1", "start": 8, "duration": 8 },
+        { "id": "openhat-m1-2", "start": 24, "duration": 8 },
+        { "id": "openhat-m1-3", "start": 40, "duration": 8 },
+        { "id": "openhat-m1-4", "start": 56, "duration": 8 }
+      ],
+      [
+        { "id": "openhat-m2-1", "start": 0, "duration": 16, "stemDirection": "down" },
+        { "id": "openhat-m2-2", "start": 4, "duration": 16, "stemDirection": "down" },
+        { "id": "openhat-m2-3", "start": 8, "duration": 16, "stemDirection": "down" },
+        { "id": "openhat-m2-4", "start": 12, "duration": 16, "stemDirection": "down" }
+      ],
+      [],
+      []
+    ],
+    "crash": [
+      [{ "id": "crash-m1-half-note", "start": 0, "duration": 2 }],
+      [],
+      [],
+      [{ "id": "crash-m4-quarter-note", "start": 0, "duration": 4 }]
+    ],
+    "tom1": [
+      [],
+      [{ "id": "tom1-m2-whole-note", "start": 0, "duration": 1 }],
+      [
+        { "id": "tom1-m3-sixteenth-1", "start": 16, "duration": 16, "stemDirection": "down" },
+        { "id": "tom1-m3-sixteenth-2", "start": 20, "duration": 16, "stemDirection": "down" }
+      ],
+      []
+    ],
+    "tom2": [
+      [],
+      [
+        { "id": "tom2-m2-half-1", "start": 0, "duration": 2 },
+        { "id": "tom2-m2-half-2", "start": 32, "duration": 2, "stemDirection": "down" }
+      ],
+      [],
+      [
+        { "id": "tom2-m4-thirtysecond-1", "start": 16, "duration": 32 },
+        { "id": "tom2-m4-thirtysecond-2", "start": 18, "duration": 32 },
+        { "id": "tom2-m4-thirtysecond-3", "start": 20, "duration": 32 }
+      ]
+    ],
+    "floorTom": [
+      [{ "id": "floortom-m1-quarter-note", "start": 32, "duration": 4 }],
+      [
+        { "id": "floortom-m2-sixteenth-1", "start": 40, "duration": 16 },
+        { "id": "floortom-m2-sixteenth-2", "start": 44, "duration": 16 }
+      ],
+      [
+        { "id": "floortom-m3-sixteenth", "start": 0, "duration": 16 },
+        { "id": "floortom-m3-thirtysecond", "start": 4, "duration": 32 }
+      ],
+      [
+        { "id": "floortom-m4-eighth-1", "start": 32, "duration": 8 },
+        { "id": "floortom-m4-eighth-2", "start": 40, "duration": 8 }
+      ]
+    ]
+  },
+  "rests": {
+    "kick": [[], [], [], [{ "id": "rest-kick-m4-eighth", "start": 32, "duration": 8 }]],
+    "snare": [[{ "id": "rest-snare-m1-quarter", "start": 40, "duration": 4 }], [], [], []],
+    "closedHat": [[], [], [], []],
+    "openHat": [[{ "id": "rest-openhat-m1-half", "start": 0, "duration": 2 }], [], [], []],
+    "crash": [[], [], [{ "id": "rest-crash-m3-whole", "start": 0, "duration": 1 }], []],
+    "tom1": [[], [], [{ "id": "rest-tom1-m3-sixteenth", "start": 32, "duration": 16 }], []],
+    "tom2": [[{ "id": "rest-tom2-m1-thirtysecond", "start": 0, "duration": 32 }], [], [], []],
+    "floorTom": [[], [], [{ "id": "rest-floortom-m3-sixtyfourth", "start": 32, "duration": 64 }], []]
+  },
+  "annotations": [
+    [
+      { "id": "text-m1-groove", "text": "Groove", "step": 0, "y": 18, "fontSize": 14 },
+      {
+        "id": "text-m1-accent",
+        "text": "Akzent",
+        "step": 16,
+        "y": 136,
+        "fontSize": 11,
+        "noteId": "snare-m1-backbeat-2"
+      }
+    ],
+    [
+      { "id": "text-m2-triplets", "text": "Triolen", "step": 0, "y": 18, "fontSize": 14 },
+      {
+        "id": "text-m2-sticking",
+        "text": "R/L/R",
+        "step": 0,
+        "y": 142,
+        "fontSize": 12,
+        "noteId": "snare-m2-triplet-0"
+      }
+    ],
+    [
+      {
+        "id": "text-m3-tie",
+        "text": "Taktübergreifende Bindung",
+        "step": 56,
+        "y": 18,
+        "fontSize": 12,
+        "noteId": "kick-tie-m3-m4"
+      }
+    ],
+    [
+      { "id": "text-m4-fill", "text": "Sechzehntel-Fill", "step": 0, "y": 18, "fontSize": 13 },
+      {
+        "id": "text-m4-ending",
+        "text": "Schluss",
+        "step": 48,
+        "y": 140,
+        "fontSize": 12,
+        "noteId": "kick-m4-last-beat"
+      }
+    ]
+  ]
+}

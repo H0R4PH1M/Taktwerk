@@ -27,6 +27,15 @@ Eine kleine Angular-Anwendung, mit der sich Schlagzeug-Patterns in frei einstell
 - Speichern im lokalen Browserspeicher und Export als JSON
 - Direkter PDF-Download mit frei wählbarem Titel und Takten pro Zeile; der Footer erscheint auf jeder PDF-Seite
 
+## Beispiel-Pattern
+
+[Feature-Showcase-Export](./public/examples/feature-showcase.json) enthält vier Takte mit allen
+Schlagzeug-Instrumenten, Noten- und Pausenwerten, Triolen, Balken, einer Taktbindung sowie freien
+und notengebundenen Texten. [Paradiddle und Tom-Variationen](./public/examples/paradiddle-toms.json)
+zeigt ein sechzehnteliges Snare-Paradiddle mit Viertel-Bassdrum, R/L-Handbeschriftungen unter
+jedem Schlag und drei orchestrierten Tom-Takten. Beide Dateien können im Editor über
+**JSON importieren** geladen werden.
+
 ## Projektstruktur
 
 ```text
@@ -73,8 +82,13 @@ Anschließend `http://localhost:4200/` im Browser öffnen. Für die Wiedergabe m
 
 ```bash
 npm test
+npx playwright install chromium
+npm run test:e2e
 npm run build
 ```
+
+Die E2E-Tests starten den Angular-Entwicklungsserver selbst. Playwright Chromium muss einmalig mit
+`npx playwright install chromium` installiert werden.
 
 ## Veröffentlichung auf GitHub Pages
 

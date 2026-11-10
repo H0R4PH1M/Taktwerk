@@ -1,0 +1,288 @@
+{
+  "title": "Paradiddle: Snare und Toms",
+  "tempo": 100,
+  "numerator": 4,
+  "denominator": 4,
+  "timeSignature": "4/4",
+  "measures": 4,
+  "subdivision": "64tel",
+  "noteTextPosition": "above",
+  "autoBeaming": true,
+  "combineVoices": true,
+  "stemDirection": "up",
+  "pattern": {
+    "kick": [
+      [
+        { "id": "kick-m1-q1", "start": 0, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m1-q2", "start": 16, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m1-q3", "start": 32, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m1-q4", "start": 48, "duration": 4, "stemDirection": "down" }
+      ],
+      [
+        { "id": "kick-m2-q1", "start": 0, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m2-q2", "start": 16, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m2-q3", "start": 32, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m2-q4", "start": 48, "duration": 4, "stemDirection": "down" }
+      ],
+      [
+        { "id": "kick-m3-q1", "start": 0, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m3-q2", "start": 16, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m3-q3", "start": 32, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m3-q4", "start": 48, "duration": 4, "stemDirection": "down" }
+      ],
+      [
+        { "id": "kick-m4-q1", "start": 0, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m4-q2", "start": 16, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m4-q3", "start": 32, "duration": 4, "stemDirection": "down" },
+        { "id": "kick-m4-q4", "start": 48, "duration": 4, "stemDirection": "down" }
+      ]
+    ],
+    "snare": [
+      [
+        { "id": "snare-m1-01", "start": 0, "duration": 16 },
+        { "id": "snare-m1-02", "start": 4, "duration": 16 },
+        { "id": "snare-m1-03", "start": 8, "duration": 16 },
+        { "id": "snare-m1-04", "start": 12, "duration": 16 },
+        { "id": "snare-m1-05", "start": 16, "duration": 16 },
+        { "id": "snare-m1-06", "start": 20, "duration": 16 },
+        { "id": "snare-m1-07", "start": 24, "duration": 16 },
+        { "id": "snare-m1-08", "start": 28, "duration": 16 },
+        { "id": "snare-m1-09", "start": 32, "duration": 16 },
+        { "id": "snare-m1-10", "start": 36, "duration": 16 },
+        { "id": "snare-m1-11", "start": 40, "duration": 16 },
+        { "id": "snare-m1-12", "start": 44, "duration": 16 },
+        { "id": "snare-m1-13", "start": 48, "duration": 16 },
+        { "id": "snare-m1-14", "start": 52, "duration": 16 },
+        { "id": "snare-m1-15", "start": 56, "duration": 16 },
+        { "id": "snare-m1-16", "start": 60, "duration": 16 }
+      ],
+      [],
+      [],
+      []
+    ],
+    "closedHat": [[], [], [], []],
+    "openHat": [[], [], [], []],
+    "crash": [[], [], [], []],
+    "tom1": [
+      [],
+      [
+        { "id": "tom1-m2-01", "start": 0, "duration": 16 },
+        { "id": "tom1-m2-02", "start": 8, "duration": 16 },
+        { "id": "tom1-m2-03", "start": 12, "duration": 16 },
+        { "id": "tom1-m2-04", "start": 20, "duration": 16 },
+        { "id": "tom1-m2-05", "start": 32, "duration": 16 },
+        { "id": "tom1-m2-06", "start": 40, "duration": 16 },
+        { "id": "tom1-m2-07", "start": 44, "duration": 16 },
+        { "id": "tom1-m2-08", "start": 52, "duration": 16 }
+      ],
+      [],
+      [
+        { "id": "tom1-m4-01", "start": 0, "duration": 16 },
+        { "id": "tom1-m4-02", "start": 8, "duration": 16 },
+        { "id": "tom1-m4-03", "start": 12, "duration": 16 },
+        { "id": "tom1-m4-04", "start": 32, "duration": 16 },
+        { "id": "tom1-m4-05", "start": 40, "duration": 16 },
+        { "id": "tom1-m4-06", "start": 44, "duration": 16 }
+      ]
+    ],
+    "tom2": [
+      [],
+      [
+        { "id": "tom2-m2-01", "start": 4, "duration": 16 },
+        { "id": "tom2-m2-02", "start": 16, "duration": 16 },
+        { "id": "tom2-m2-03", "start": 24, "duration": 16 },
+        { "id": "tom2-m2-04", "start": 28, "duration": 16 },
+        { "id": "tom2-m2-05", "start": 36, "duration": 16 },
+        { "id": "tom2-m2-06", "start": 48, "duration": 16 },
+        { "id": "tom2-m2-07", "start": 56, "duration": 16 },
+        { "id": "tom2-m2-08", "start": 60, "duration": 16 }
+      ],
+      [
+        { "id": "tom2-m3-01", "start": 0, "duration": 16 },
+        { "id": "tom2-m3-02", "start": 8, "duration": 16 },
+        { "id": "tom2-m3-03", "start": 12, "duration": 16 },
+        { "id": "tom2-m3-04", "start": 20, "duration": 16 },
+        { "id": "tom2-m3-05", "start": 32, "duration": 16 },
+        { "id": "tom2-m3-06", "start": 40, "duration": 16 },
+        { "id": "tom2-m3-07", "start": 44, "duration": 16 },
+        { "id": "tom2-m3-08", "start": 52, "duration": 16 }
+      ],
+      [
+        { "id": "tom2-m4-01", "start": 4, "duration": 16 },
+        { "id": "tom2-m4-02", "start": 16, "duration": 16 },
+        { "id": "tom2-m4-03", "start": 24, "duration": 16 },
+        { "id": "tom2-m4-04", "start": 36, "duration": 16 },
+        { "id": "tom2-m4-05", "start": 48, "duration": 16 },
+        { "id": "tom2-m4-06", "start": 56, "duration": 16 }
+      ]
+    ],
+    "floorTom": [
+      [],
+      [],
+      [
+        { "id": "floortom-m3-01", "start": 4, "duration": 16 },
+        { "id": "floortom-m3-02", "start": 16, "duration": 16 },
+        { "id": "floortom-m3-03", "start": 24, "duration": 16 },
+        { "id": "floortom-m3-04", "start": 28, "duration": 16 },
+        { "id": "floortom-m3-05", "start": 36, "duration": 16 },
+        { "id": "floortom-m3-06", "start": 48, "duration": 16 },
+        { "id": "floortom-m3-07", "start": 56, "duration": 16 },
+        { "id": "floortom-m3-08", "start": 60, "duration": 16 }
+      ],
+      [
+        { "id": "floortom-m4-01", "start": 20, "duration": 16 },
+        { "id": "floortom-m4-02", "start": 28, "duration": 16 },
+        { "id": "floortom-m4-03", "start": 52, "duration": 16 },
+        { "id": "floortom-m4-04", "start": 60, "duration": 16 }
+      ]
+    ]
+  },
+  "rests": {
+    "kick": [[], [], [], []],
+    "snare": [[], [], [], []],
+    "closedHat": [[], [], [], []],
+    "openHat": [[], [], [], []],
+    "crash": [[], [], [], []],
+    "tom1": [[], [], [], []],
+    "tom2": [[], [], [], []],
+    "floorTom": [[], [], [], []]
+  },
+  "annotations": [
+    [
+      { "id": "hand-m1-01", "text": "R", "step": 0, "y": 148, "fontSize": 11, "noteId": "snare-m1-01" },
+      { "id": "hand-m1-02", "text": "L", "step": 4, "y": 148, "fontSize": 11, "noteId": "snare-m1-02" },
+      { "id": "hand-m1-03", "text": "R", "step": 8, "y": 148, "fontSize": 11, "noteId": "snare-m1-03" },
+      { "id": "hand-m1-04", "text": "R", "step": 12, "y": 148, "fontSize": 11, "noteId": "snare-m1-04" },
+      { "id": "hand-m1-05", "text": "L", "step": 16, "y": 148, "fontSize": 11, "noteId": "snare-m1-05" },
+      { "id": "hand-m1-06", "text": "R", "step": 20, "y": 148, "fontSize": 11, "noteId": "snare-m1-06" },
+      { "id": "hand-m1-07", "text": "L", "step": 24, "y": 148, "fontSize": 11, "noteId": "snare-m1-07" },
+      { "id": "hand-m1-08", "text": "L", "step": 28, "y": 148, "fontSize": 11, "noteId": "snare-m1-08" },
+      { "id": "hand-m1-09", "text": "R", "step": 32, "y": 148, "fontSize": 11, "noteId": "snare-m1-09" },
+      { "id": "hand-m1-10", "text": "L", "step": 36, "y": 148, "fontSize": 11, "noteId": "snare-m1-10" },
+      { "id": "hand-m1-11", "text": "R", "step": 40, "y": 148, "fontSize": 11, "noteId": "snare-m1-11" },
+      { "id": "hand-m1-12", "text": "R", "step": 44, "y": 148, "fontSize": 11, "noteId": "snare-m1-12" },
+      { "id": "hand-m1-13", "text": "L", "step": 48, "y": 148, "fontSize": 11, "noteId": "snare-m1-13" },
+      { "id": "hand-m1-14", "text": "R", "step": 52, "y": 148, "fontSize": 11, "noteId": "snare-m1-14" },
+      { "id": "hand-m1-15", "text": "L", "step": 56, "y": 148, "fontSize": 11, "noteId": "snare-m1-15" },
+      { "id": "hand-m1-16", "text": "L", "step": 60, "y": 148, "fontSize": 11, "noteId": "snare-m1-16" },
+      {
+        "id": "accent-m1-first",
+        "text": ">",
+        "step": 0,
+        "y": 13,
+        "fontSize": 18,
+        "noteId": "snare-m1-01"
+      },
+      {
+        "id": "accent-m1-second",
+        "text": ">",
+        "step": 32,
+        "y": 13,
+        "fontSize": 18,
+        "noteId": "snare-m1-09"
+      }
+    ],
+    [
+      { "id": "hand-m2-01", "text": "R", "step": 0, "y": 148, "fontSize": 11, "noteId": "tom1-m2-01" },
+      { "id": "hand-m2-02", "text": "L", "step": 4, "y": 148, "fontSize": 11, "noteId": "tom2-m2-01" },
+      { "id": "hand-m2-03", "text": "R", "step": 8, "y": 148, "fontSize": 11, "noteId": "tom1-m2-02" },
+      { "id": "hand-m2-04", "text": "R", "step": 12, "y": 148, "fontSize": 11, "noteId": "tom1-m2-03" },
+      { "id": "hand-m2-05", "text": "L", "step": 16, "y": 148, "fontSize": 11, "noteId": "tom2-m2-02" },
+      { "id": "hand-m2-06", "text": "R", "step": 20, "y": 148, "fontSize": 11, "noteId": "tom1-m2-04" },
+      { "id": "hand-m2-07", "text": "L", "step": 24, "y": 148, "fontSize": 11, "noteId": "tom2-m2-03" },
+      { "id": "hand-m2-08", "text": "L", "step": 28, "y": 148, "fontSize": 11, "noteId": "tom2-m2-04" },
+      { "id": "hand-m2-09", "text": "R", "step": 32, "y": 148, "fontSize": 11, "noteId": "tom1-m2-05" },
+      { "id": "hand-m2-10", "text": "L", "step": 36, "y": 148, "fontSize": 11, "noteId": "tom2-m2-05" },
+      { "id": "hand-m2-11", "text": "R", "step": 40, "y": 148, "fontSize": 11, "noteId": "tom1-m2-06" },
+      { "id": "hand-m2-12", "text": "R", "step": 44, "y": 148, "fontSize": 11, "noteId": "tom1-m2-07" },
+      { "id": "hand-m2-13", "text": "L", "step": 48, "y": 148, "fontSize": 11, "noteId": "tom2-m2-06" },
+      { "id": "hand-m2-14", "text": "R", "step": 52, "y": 148, "fontSize": 11, "noteId": "tom1-m2-08" },
+      { "id": "hand-m2-15", "text": "L", "step": 56, "y": 148, "fontSize": 11, "noteId": "tom2-m2-07" },
+      { "id": "hand-m2-16", "text": "L", "step": 60, "y": 148, "fontSize": 11, "noteId": "tom2-m2-08" },
+      {
+        "id": "accent-m2-first",
+        "text": ">",
+        "step": 0,
+        "y": 13,
+        "fontSize": 18,
+        "noteId": "tom1-m2-01"
+      },
+      {
+        "id": "accent-m2-second",
+        "text": ">",
+        "step": 32,
+        "y": 13,
+        "fontSize": 18,
+        "noteId": "tom1-m2-05"
+      }
+    ],
+    [
+      { "id": "hand-m3-01", "text": "R", "step": 0, "y": 148, "fontSize": 11, "noteId": "tom2-m3-01" },
+      { "id": "hand-m3-02", "text": "L", "step": 4, "y": 148, "fontSize": 11, "noteId": "floortom-m3-01" },
+      { "id": "hand-m3-03", "text": "R", "step": 8, "y": 148, "fontSize": 11, "noteId": "tom2-m3-02" },
+      { "id": "hand-m3-04", "text": "R", "step": 12, "y": 148, "fontSize": 11, "noteId": "tom2-m3-03" },
+      { "id": "hand-m3-05", "text": "L", "step": 16, "y": 148, "fontSize": 11, "noteId": "floortom-m3-02" },
+      { "id": "hand-m3-06", "text": "R", "step": 20, "y": 148, "fontSize": 11, "noteId": "tom2-m3-04" },
+      { "id": "hand-m3-07", "text": "L", "step": 24, "y": 148, "fontSize": 11, "noteId": "floortom-m3-03" },
+      { "id": "hand-m3-08", "text": "L", "step": 28, "y": 148, "fontSize": 11, "noteId": "floortom-m3-04" },
+      { "id": "hand-m3-09", "text": "R", "step": 32, "y": 148, "fontSize": 11, "noteId": "tom2-m3-05" },
+      { "id": "hand-m3-10", "text": "L", "step": 36, "y": 148, "fontSize": 11, "noteId": "floortom-m3-05" },
+      { "id": "hand-m3-11", "text": "R", "step": 40, "y": 148, "fontSize": 11, "noteId": "tom2-m3-06" },
+      { "id": "hand-m3-12", "text": "R", "step": 44, "y": 148, "fontSize": 11, "noteId": "tom2-m3-07" },
+      { "id": "hand-m3-13", "text": "L", "step": 48, "y": 148, "fontSize": 11, "noteId": "floortom-m3-06" },
+      { "id": "hand-m3-14", "text": "R", "step": 52, "y": 148, "fontSize": 11, "noteId": "tom2-m3-08" },
+      { "id": "hand-m3-15", "text": "L", "step": 56, "y": 148, "fontSize": 11, "noteId": "floortom-m3-07" },
+      { "id": "hand-m3-16", "text": "L", "step": 60, "y": 148, "fontSize": 11, "noteId": "floortom-m3-08" },
+      {
+        "id": "accent-m3-first",
+        "text": ">",
+        "step": 0,
+        "y": 13,
+        "fontSize": 18,
+        "noteId": "tom2-m3-01"
+      },
+      {
+        "id": "accent-m3-second",
+        "text": ">",
+        "step": 32,
+        "y": 13,
+        "fontSize": 18,
+        "noteId": "tom2-m3-05"
+      }
+    ],
+    [
+      { "id": "hand-m4-01", "text": "R", "step": 0, "y": 148, "fontSize": 11, "noteId": "tom1-m4-01" },
+      { "id": "hand-m4-02", "text": "L", "step": 4, "y": 148, "fontSize": 11, "noteId": "tom2-m4-01" },
+      { "id": "hand-m4-03", "text": "R", "step": 8, "y": 148, "fontSize": 11, "noteId": "tom1-m4-02" },
+      { "id": "hand-m4-04", "text": "R", "step": 12, "y": 148, "fontSize": 11, "noteId": "tom1-m4-03" },
+      { "id": "hand-m4-05", "text": "L", "step": 16, "y": 148, "fontSize": 11, "noteId": "tom2-m4-02" },
+      { "id": "hand-m4-06", "text": "R", "step": 20, "y": 148, "fontSize": 11, "noteId": "floortom-m4-01" },
+      { "id": "hand-m4-07", "text": "L", "step": 24, "y": 148, "fontSize": 11, "noteId": "tom2-m4-03" },
+      { "id": "hand-m4-08", "text": "L", "step": 28, "y": 148, "fontSize": 11, "noteId": "floortom-m4-02" },
+      { "id": "hand-m4-09", "text": "R", "step": 32, "y": 148, "fontSize": 11, "noteId": "tom1-m4-04" },
+      { "id": "hand-m4-10", "text": "L", "step": 36, "y": 148, "fontSize": 11, "noteId": "tom2-m4-04" },
+      { "id": "hand-m4-11", "text": "R", "step": 40, "y": 148, "fontSize": 11, "noteId": "tom1-m4-05" },
+      { "id": "hand-m4-12", "text": "R", "step": 44, "y": 148, "fontSize": 11, "noteId": "tom1-m4-06" },
+      { "id": "hand-m4-13", "text": "L", "step": 48, "y": 148, "fontSize": 11, "noteId": "tom2-m4-05" },
+      { "id": "hand-m4-14", "text": "R", "step": 52, "y": 148, "fontSize": 11, "noteId": "floortom-m4-03" },
+      { "id": "hand-m4-15", "text": "L", "step": 56, "y": 148, "fontSize": 11, "noteId": "tom2-m4-06" },
+      { "id": "hand-m4-16", "text": "L", "step": 60, "y": 148, "fontSize": 11, "noteId": "floortom-m4-04" },
+      {
+        "id": "accent-m4-first",
+        "text": ">",
+        "step": 0,
+        "y": 13,
+        "fontSize": 18,
+        "noteId": "tom1-m4-01"
+      },
+      {
+        "id": "accent-m4-second",
+        "text": ">",
+        "step": 32,
+        "y": 13,
+        "fontSize": 18,
+        "noteId": "tom1-m4-04"
+      }
+    ]
+  ]
+}

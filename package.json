@@ -10,7 +10,8 @@
     "prewatch": "node scripts/generate-build-info.mjs",
     "watch": "ng build --watch --configuration development",
     "pretest": "node scripts/generate-build-info.mjs",
-    "test": "ng test"
+    "test": "ng test",
+    "test:e2e": "tsc --noEmit -p tsconfig.e2e.json && playwright test"
   },
   "prettier": {
     "printWidth": 100,
@@ -42,7 +43,9 @@
     "@angular/build": "^21.1.4",
     "@angular/cli": "^21.1.4",
     "@angular/compiler-cli": "^21.1.0",
+    "@types/node": "^22.0.0",
     "angular-cli-ghpages": "^3.1.2",
+    "@playwright/test": "^1.65.0",
     "jsdom": "^27.1.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
