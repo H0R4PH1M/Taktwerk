@@ -203,11 +203,10 @@ export class ScoreEditorComponent implements OnDestroy {
       return null;
     }
     const annotationId = this.selectedAnnotationIds()[0];
-    return (
-      this.annotations()
-        .flat()
-        .find((annotation) => annotation.id === annotationId) ?? null
-    );
+    const annotation = this.annotations()
+      .flat()
+      .find((item) => item.id === annotationId);
+    return annotation ? { ...annotation, fontSize: annotation.fontSize ?? 12 } : null;
   });
   protected readonly selectedNoteCount = computed(() => {
     const selected = new Set(this.selectedNoteIds());
@@ -278,6 +277,7 @@ export class ScoreEditorComponent implements OnDestroy {
     this.selectedBeamNotes().some(({ note }) => note.manualBeamGroupId !== undefined),
   );
   protected readonly annotationInput = signal('');
+  protected readonly annotationFontSize = signal(12);
   protected readonly ticksPerWholeNote = computed(() =>
     Math.max(64, this.timeSignatureDenominator()),
   );
@@ -525,6 +525,41 @@ export class ScoreEditorComponent implements OnDestroy {
 
   protected setAnnotationInput(event: Event): void {
     this.annotationInput.set((event.target as HTMLInputElement).value.slice(0, 60));
+  }
+
+  protected setAnnotationFontSize(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const fontSize = Math.round(Number(input.value));
+    if (!Number.isFinite(fontSize)) {
+      return;
+    }
+    const normalizedFontSize = Math.min(72, Math.max(6, fontSize));
+    this.annotationFontSize.set(normalizedFontSize);
+    input.value = String(normalizedFontSize);
+  }
+
+  protected setSelectedAnnotationFontSize(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const annotationId = this.selectedAnnotationEdit()?.id;
+    const fontSize = Math.round(Number(input.value));
+    const annotation = this.annotations().flat().find((item) => item.id === annotationId);
+    if (!annotationId || !annotation || !Number.isFinite(fontSize)) {
+      return;
+    }
+    const normalizedFontSize = Math.min(72, Math.max(6, fontSize));
+    if ((annotation.fontSize ?? 12) === normalizedFontSize) {
+      input.value = String(normalizedFontSize);
+      return;
+    }
+    this.recordUndo();
+    this.annotations.update((annotations) =>
+      annotations.map((measure) =>
+        measure.map((item) =>
+          item.id === annotationId ? { ...item, fontSize: normalizedFontSize } : item,
+        ),
+      ),
+    );
+    input.value = String(normalizedFontSize);
   }
 
   protected setAutoBeaming(event: Event): void {
@@ -2433,6 +2468,7 @@ export class ScoreEditorComponent implements OnDestroy {
         text,
         step,
         y,
+        fontSize: this.annotationFontSize(),
       });
       return updated;
     });
@@ -2457,6 +2493,7 @@ export class ScoreEditorComponent implements OnDestroy {
         this.noteTextPosition() === 'above'
           ? NOTE_TEXT_ABOVE_Y
           : NOTE_TEXT_BELOW_Y,
+      fontSize: this.annotationFontSize(),
       noteId,
     };
     this.recordUndo();

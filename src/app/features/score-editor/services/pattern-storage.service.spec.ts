@@ -16,7 +16,7 @@ describe('PatternStorageService', () => {
       measures: 1,
       pattern: tracks,
       rests: tracks,
-      annotations: [[]],
+      annotations: [[{ id: 'text-1', text: 'Intro', step: 0, y: 40, fontSize: 18 }]],
     });
 
     const imported = service.importJson(
@@ -31,6 +31,7 @@ describe('PatternStorageService', () => {
     expect(imported.numerator).toBe(6);
     expect(imported.denominator).toBe(8);
     expect(imported.measures).toBe(1);
+    expect(imported.annotations[0][0].fontSize).toBe(18);
   });
 
   it('imports patterns with more than four measures', () => {
@@ -70,5 +71,28 @@ describe('PatternStorageService', () => {
         () => 'note-imported',
       ),
     ).toThrow('Ungültige JSON-Datei.');
+  });
+
+  it('rejects annotation font sizes outside the supported range', () => {
+    const service = new PatternStorageService();
+    const tracks = Object.fromEntries(DRUM_INSTRUMENTS.map(({ id }) => [id, [[]]]));
+
+    expect(() =>
+      service.importJson(
+        JSON.stringify({
+          tempo: 112,
+          measures: 1,
+          numerator: 4,
+          denominator: 4,
+          pattern: tracks,
+          rests: tracks,
+          annotations: [[{ id: 'text-1', text: 'Intro', step: 0, y: 40, fontSize: 73 }]],
+        }),
+        DRUM_INSTRUMENTS,
+        NOTE_VALUES,
+        TIME_SIGNATURE_DENOMINATORS,
+        () => 'note-imported',
+      ),
+    ).toThrow('Ungültiges Text-Annotationsformat');
   });
 });

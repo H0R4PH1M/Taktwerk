@@ -222,6 +222,7 @@
               [attr.data-note-id]="annotation.noteId ?? null"
               [attr.x]="annotation.x"
               [attr.y]="annotation.y"
+              [style.font-size.px]="annotation.fontSize ?? 12"
               [attr.text-anchor]="annotation.kind === 'note' ? 'middle' : 'start'"
               role="button"
               tabindex="0"

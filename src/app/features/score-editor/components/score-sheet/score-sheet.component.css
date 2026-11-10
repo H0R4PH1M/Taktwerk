@@ -83,7 +83,8 @@
 .score-annotation {
   fill: #25372a;
   cursor: pointer;
-  font: 600 12px var(--font-body);
+  font-family: var(--font-body);
+  font-weight: 600;
 }
 
 .score-annotation:hover,

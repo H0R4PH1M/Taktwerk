@@ -415,6 +415,68 @@
   font: 500 10px var(--font-body);
 }
 
+.annotation-font-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #60685f;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.annotation-font-size input {
+  width: 58px;
+  min-width: 0;
+  text-align: center;
+}
+
+.special-character-picker {
+  position: relative;
+}
+
+.special-character-menu {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 4px);
+  left: 0;
+  padding: 4px;
+  display: flex;
+  gap: 3px;
+  border: 1px solid #e4e5dd;
+  border-radius: 6px;
+  background: #fffefa;
+  box-shadow: 0 8px 20px rgb(45 49 39 / 14%);
+}
+
+.special-character-option {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #38483d;
+  cursor: pointer;
+  font: 20px var(--font-body);
+}
+
+.special-character-option:hover,
+.special-character-option:focus-visible {
+  border-color: #b9cbb8;
+  background: #eaf1e7;
+}
+
+.annotation-editor label {
+  min-width: min(180px, 100%);
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 5px;
+  color: #60685f;
+  font-size: 10px;
+}
+
 .text-mode-option {
   min-height: 34px;
   padding: 4px 8px;

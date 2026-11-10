@@ -44,6 +44,7 @@ export interface SelectionNotesEdit {
 export interface SelectionAnnotationEdit {
   id: string;
   text: string;
+  fontSize: number;
 }
 
 export interface NoteEditChange {
@@ -59,6 +60,13 @@ export interface NoteEditChange {
 })
 export class EditorToolboxComponent {
   protected readonly durationMenuKind = signal<DurationPickerKind | null>(null);
+  protected readonly specialCharacterMenuOpen = signal(false);
+  protected readonly specialCharacters = [
+    { symbol: '●', label: 'Ausgefüllter Kreis' },
+    { symbol: '○', label: 'Leerer Kreis' },
+    { symbol: '■', label: 'Ausgefülltes Quadrat' },
+    { symbol: '□', label: 'Leeres Quadrat' },
+  ];
   protected readonly durationPickers = [
     {
       kind: 'notes',
@@ -100,6 +108,7 @@ export class EditorToolboxComponent {
   readonly tupletCount = input.required<number>();
   readonly tupletInTimeOf = input.required<number>();
   readonly annotationInput = input.required<string>();
+  readonly annotationFontSize = input.required<number>();
   readonly toolMode = input.required<ToolMode>();
   readonly noteTextPosition = input.required<NoteTextPosition>();
   readonly fillMeasurePending = input.required<boolean>();
@@ -120,6 +129,9 @@ export class EditorToolboxComponent {
   readonly pasteRequested = output<void>();
   readonly noteEditChanged = output<NoteEditChange>();
   readonly annotationTextChanged = output<string>();
+  readonly annotationInputTextChanged = output<string>();
+  readonly annotationFontSizeChanged = output<Event>();
+  readonly selectedAnnotationFontSizeChanged = output<Event>();
   readonly tupletsEnabledChanged = output<boolean>();
   readonly tupletCountChanged = output<Event>();
   readonly tupletInTimeOfChanged = output<Event>();
@@ -142,6 +154,10 @@ export class EditorToolboxComponent {
 
   toggleDurationMenu(kind: DurationPickerKind): void {
     this.durationMenuKind.update((openKind) => (openKind === kind ? null : kind));
+  }
+
+  toggleSpecialCharacterMenu(): void {
+    this.specialCharacterMenuOpen.update((open) => !open);
   }
 
   chooseDuration(kind: DurationPickerKind, value: NoteValue): void {
@@ -174,13 +190,27 @@ export class EditorToolboxComponent {
   }
 
   @HostListener('document:click')
-  closeDurationMenu(): void {
+  closeMenus(): void {
     this.durationMenuKind.set(null);
+    this.specialCharacterMenuOpen.set(false);
   }
 
   @HostListener('document:keydown.escape')
-  closeDurationMenuOnEscape(): void {
+  closeMenusOnEscape(): void {
     this.durationMenuKind.set(null);
+    this.specialCharacterMenuOpen.set(false);
+  }
+
+  insertSpecialCharacter(symbol: string, input: HTMLInputElement): void {
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    const text = `${input.value.slice(0, start)}${symbol}${input.value.slice(end)}`.slice(0, 60);
+    const cursor = Math.min(start + symbol.length, 60);
+    input.value = text;
+    this.annotationInputTextChanged.emit(text);
+    input.focus();
+    input.setSelectionRange(cursor, cursor);
+    this.specialCharacterMenuOpen.set(false);
   }
 
   emitNoteEdit(field: NoteEditChange['field'], event: Event): void {

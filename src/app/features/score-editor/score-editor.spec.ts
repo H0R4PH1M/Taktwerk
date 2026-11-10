@@ -1575,9 +1575,24 @@ describe('ScoreEditorComponent', () => {
     if (!textInput) {
       throw new Error('Partiturtext-Werkzeug wurde nicht angezeigt.');
     }
+    const newTextSize = compiled.querySelector<HTMLInputElement>(
+      '[aria-label="Schriftgröße für neuen Text"]',
+    );
+    if (!newTextSize) {
+      throw new Error('Schriftgrößenfeld für neuen Text wurde nicht angezeigt.');
+    }
+    newTextSize.value = '18';
+    newTextSize.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
     textInput.value = 'Intro';
+    textInput.setSelectionRange(2, 2);
     textInput.dispatchEvent(new Event('input', { bubbles: true }));
     fixture.detectChanges();
+    compiled.querySelector<HTMLButtonElement>('[aria-label="Sonderzeichen auswählen"]')?.click();
+    fixture.detectChanges();
+    compiled.querySelector<HTMLButtonElement>('[aria-label="Leerer Kreis einfügen"]')?.click();
+    fixture.detectChanges();
+    expect(textInput.value).toBe('In○tro');
     compiled.querySelector<HTMLButtonElement>('[aria-label="Textmodus Freitext"]')?.click();
     fixture.detectChanges();
     compiled
@@ -1592,6 +1607,8 @@ describe('ScoreEditorComponent', () => {
     if (!annotation) {
       throw new Error('Partiturtext wurde nicht angezeigt.');
     }
+    expect(annotation.textContent).toBe('In○tro');
+    expect(annotation.style.fontSize).toBe('18px');
     annotation.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     fixture.detectChanges();
     compiled.querySelector<HTMLButtonElement>('[aria-label="Auswahl bearbeiten"]')?.click();
@@ -1606,6 +1623,18 @@ describe('ScoreEditorComponent', () => {
     editInput.dispatchEvent(new Event('input', { bubbles: true }));
     fixture.detectChanges();
     expect(compiled.querySelector('.score-annotation')?.textContent).toContain('Strophe');
+    const selectedTextSize = compiled.querySelector<HTMLInputElement>(
+      '[aria-label="Schriftgröße des ausgewählten Textes"]',
+    );
+    if (!selectedTextSize) {
+      throw new Error('Schriftgrößenfeld für ausgewählten Text wurde nicht angezeigt.');
+    }
+    selectedTextSize.value = '24';
+    selectedTextSize.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    expect(compiled.querySelector('.score-annotation')?.getAttribute('style')).toContain(
+      'font-size: 24px',
+    );
 
     compiled.querySelector<HTMLButtonElement>('[aria-label="Auswahl kopieren"]')?.click();
     fixture.detectChanges();
@@ -1618,6 +1647,11 @@ describe('ScoreEditorComponent', () => {
       ?.dispatchEvent(new MouseEvent('click', { bubbles: true, clientY: 60 }));
     fixture.detectChanges();
     expect(compiled.querySelectorAll('.score-annotation')).toHaveLength(2);
+    expect(
+      [...compiled.querySelectorAll<SVGTextElement>('.score-annotation')].every(
+        (item) => item.style.fontSize === '24px',
+      ),
+    ).toBe(true);
 
     compiled.querySelector<HTMLButtonElement>('[aria-label="Auswahl löschen"]')?.click();
     fixture.detectChanges();

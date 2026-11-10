@@ -49,6 +49,7 @@ export interface ScoreAnnotation {
   text: string;
   step: number;
   y: number;
+  fontSize?: number;
   noteId?: string;
 }
 

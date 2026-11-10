@@ -428,6 +428,11 @@ export class PatternStorageService {
             Number.isFinite(annotation.y) &&
             annotation.y >= 13 &&
             annotation.y <= 148 &&
+            (annotation.fontSize === undefined ||
+              (typeof annotation.fontSize === 'number' &&
+                Number.isInteger(annotation.fontSize) &&
+                annotation.fontSize >= 6 &&
+                annotation.fontSize <= 72)) &&
             (annotation.noteId === undefined || typeof annotation.noteId === 'string'),
         ),
     );

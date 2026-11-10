@@ -178,6 +178,7 @@
           <p class="toolbox-label">PARTITURTEXT</p>
           <div class="annotation-controls">
             <input
+              #annotationInputField
               aria-label="Partiturtext"
               type="text"
               maxlength="60"
@@ -185,6 +186,47 @@
               [value]="annotationInput()"
               (input)="annotationInputChanged.emit($event)"
             />
+            <label class="annotation-font-size">
+              <span>Schriftgröße (px)</span>
+              <input
+                aria-label="Schriftgröße für neuen Text"
+                type="number"
+                min="6"
+                max="72"
+                step="1"
+                [value]="annotationFontSize()"
+                (change)="annotationFontSizeChanged.emit($event)"
+              />
+            </label>
+            <div class="special-character-picker" (click)="$event.stopPropagation()">
+              <button
+                class="text-mode-option"
+                type="button"
+                aria-label="Sonderzeichen auswählen"
+                aria-haspopup="menu"
+                aria-controls="special-character-menu"
+                [attr.aria-expanded]="specialCharacterMenuOpen()"
+                (click)="toggleSpecialCharacterMenu()"
+              >
+                Sonderzeichen
+              </button>
+              @if (specialCharacterMenuOpen()) {
+                <div id="special-character-menu" class="special-character-menu" role="menu">
+                  @for (character of specialCharacters; track character.symbol) {
+                    <button
+                      class="special-character-option"
+                      type="button"
+                      role="menuitem"
+                      [attr.aria-label]="character.label + ' einfügen'"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="insertSpecialCharacter(character.symbol, annotationInputField)"
+                    >
+                      {{ character.symbol }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
             <button
               class="text-mode-option"
               type="button"
@@ -541,16 +583,30 @@
       </div>
     }
     @if (editingSelection() && selectedAnnotationEdit(); as annotation) {
-      <label class="selection-editor annotation-editor">
-        <span>Text bearbeiten</span>
-        <input
-          aria-label="Ausgewählten Text bearbeiten"
-          type="text"
-          maxlength="60"
-          [value]="annotation.text"
-          (input)="emitAnnotationText($event)"
-        />
-      </label>
+      <div class="selection-editor annotation-editor" role="group" aria-label="Text bearbeiten">
+        <label>
+          <span>Text</span>
+          <input
+            aria-label="Ausgewählten Text bearbeiten"
+            type="text"
+            maxlength="60"
+            [value]="annotation.text"
+            (input)="emitAnnotationText($event)"
+          />
+        </label>
+        <label>
+          <span>Schriftgröße (px)</span>
+          <input
+            aria-label="Schriftgröße des ausgewählten Textes"
+            type="number"
+            min="6"
+            max="72"
+            step="1"
+            [value]="annotation.fontSize"
+            (change)="selectedAnnotationFontSizeChanged.emit($event)"
+          />
+        </label>
+      </div>
     }
     </div>
   }
