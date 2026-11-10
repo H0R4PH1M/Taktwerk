@@ -143,10 +143,8 @@
                   [attr.x2]="(note.stemDirection === 'down' ? -5 : 5) + (note.beamStemXOffset ?? 0)"
                   [attr.y2]="
                     note.beamGroupId
-                      ? beamStemEnd(note.flagCount, note.beamStemOffset ?? 0, note.stemDirection)
-                      : note.stemDirection === 'down'
-                        ? 34
-                        : -34
+                      ? beamStemEnd(note.beamStemOffset ?? 0, note.stemDirection)
+                      : note.stemEndOffset ?? (note.stemDirection === 'down' ? 34 : -34)
                   "
                 ></line>
                 @if (!note.beamGroupId) {
@@ -155,8 +153,8 @@
                       class="note-flag"
                       [attr.d]="
                         note.stemDirection === 'down'
-                          ? 'M -5 ' + (34 - flag * 5) + ' Q -17 ' + (32 - flag * 5) + ' -9 ' + (25 - flag * 5)
-                          : 'M 5 ' + (-34 + flag * 5) + ' Q 17 ' + (-32 + flag * 5) + ' 9 ' + (-25 + flag * 5)
+                            ? 'M -5 ' + ((note.stemEndOffset ?? 34) - flag * 5) + ' Q -17 ' + ((note.stemEndOffset ?? 34) - 2 - flag * 5) + ' -9 ' + ((note.stemEndOffset ?? 34) - 9 - flag * 5)
+                            : 'M 5 ' + ((note.stemEndOffset ?? -34) + flag * 5) + ' Q 17 ' + ((note.stemEndOffset ?? -34) + 2 + flag * 5) + ' 9 ' + ((note.stemEndOffset ?? -34) + 9 + flag * 5)
                       "
                     ></path>
                   }
@@ -178,8 +176,17 @@
               [attr.data-tuplet-index-start]="beam.tupletIndexStart ?? null"
               aria-hidden="true"
             >
-              @for (level of beamLevels(beam.levels); track level) {
-                <path class="note-beam" [attr.d]="beamPath(beam, level)"></path>
+              @if (beam.segments) {
+                @for (segment of beam.segments; track $index) {
+                  <path
+                    class="note-beam"
+                    [attr.d]="beamPath(beam, segment.level, segment.xStart, segment.xEnd)"
+                  ></path>
+                }
+              } @else {
+                @for (level of beamLevels(beam.levels); track level) {
+                  <path class="note-beam" [attr.d]="beamPath(beam, level)"></path>
+                }
               }
               @if (
                 beam.tupletIndexStart === 0 &&

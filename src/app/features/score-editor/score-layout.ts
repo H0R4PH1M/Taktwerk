@@ -3,6 +3,7 @@ import type {
   DrumInstrument,
   NoteValue,
   Pattern,
+  ScoreBeamSegment,
   ScoreBeamMarker,
   ScoreFragment,
   ScoreTupletMarker,
@@ -25,6 +26,7 @@ export interface ScoreLayoutOptions {
   numerator: number;
   denominator: number;
   autoBeaming: boolean;
+  combineVoices: boolean;
   stemDirection: StemDirection;
   measureWidth: number;
 }
@@ -177,8 +179,7 @@ function beamNotesForMeasure(
       }
       const beatIndex = Math.floor(note.measureStep / beatLength);
       const key = [
-        note.instrumentId,
-        note.duration,
+        options.combineVoices ? 'combined' : 'separate',
         note.beamOffset ?? 0,
         note.beamOffsetX ?? 0,
         note.beamCollisionSide ?? 'automatic',
@@ -191,6 +192,12 @@ function beamNotesForMeasure(
       notesByBeat.set(key, group);
     }
   }
+  const manualStemDirectionBeats = new Set<number>();
+  for (const note of notes) {
+    if (note.stemDirection !== options.stemDirection) {
+      manualStemDirectionBeats.add(Math.floor(note.measureStep / beatLength));
+    }
+  }
 
   const pendingBeams: Array<
     ScoreBeamMarker & {
@@ -201,14 +208,22 @@ function beamNotesForMeasure(
       beamCollisionSide?: BeamCollisionSide;
     }
   > = [];
+  const voiceDirectionByNoteId = new Map<string, StemDirection>();
   const addBeam = (group: ScoreFragment[], beatIndex: number, manualGroupId?: string) => {
-    if (group.length < 2) {
+    if (group.length < 2 || group[0].measureStep === group[group.length - 1].measureStep) {
       return;
     }
     const first = group[0];
     const last = group[group.length - 1];
     const direction = first.stemDirection;
     const stemX = direction === 'down' ? -5 : 5;
+    const xStart = first.x + stemX + (first.beamOffsetX ?? 0);
+    const xEnd = last.x + stemX + (last.beamOffsetX ?? 0);
+    const beamY = manualGroupId
+      ? first.y + (direction === 'down' ? 34 : -34)
+      : direction === 'down'
+        ? Math.max(...group.map((note) => note.y)) + 34
+        : Math.min(...group.map((note) => note.y)) - 34;
     pendingBeams.push({
       id: manualGroupId
         ? `manual-beam-${manualGroupId}`
@@ -216,10 +231,11 @@ function beamNotesForMeasure(
       beatIndex,
       noteIds: group.map((note) => note.id),
       instrumentId: first.instrumentId,
-      levels: first.flagCount,
-      xStart: first.x + stemX + (first.beamOffsetX ?? 0),
-      xEnd: last.x + stemX + (last.beamOffsetX ?? 0),
-      y: first.y + (direction === 'down' ? 34 : -34),
+      levels: Math.max(...group.map((note) => note.flagCount)),
+      segments: beamSegmentsForGroup(group, xStart, xEnd, stemX),
+      xStart,
+      xEnd,
+      y: beamY,
       beamOffset: first.beamOffset ?? 0,
       beamOffsetX: first.beamOffsetX ?? 0,
       beamCollisionSide: first.beamCollisionSide,
@@ -232,28 +248,60 @@ function beamNotesForMeasure(
   };
 
   for (const { beatIndex, notes: group } of notesByBeat.values()) {
-    group.sort((left, right) => left.measureStep - right.measureStep);
-    const first = group[0];
-    const spacing =
-      (options.ticksPerWholeNote / first.duration) *
-      (first.tupletId
-        ? (first.tupletInTimeOf ?? 1) / (first.tupletCount ?? 1)
-        : 1);
-    let consecutive: ScoreFragment[] = [];
-    for (const note of group) {
-      const previous = consecutive[consecutive.length - 1];
-      if (
-        previous &&
-        (Math.abs(note.measureStep - (previous.measureStep + spacing)) > 1e-7 ||
-          (previous.tupletId !== undefined &&
-            note.tupletIndex !== (previous.tupletIndex ?? -1) + 1))
-      ) {
-        addBeam(consecutive, beatIndex);
-        consecutive = [];
+    const voiceGroups =
+      options.combineVoices ? [group] : partitionInstrumentVoices(group);
+    for (const [voiceIndex, voiceGroup] of voiceGroups.entries()) {
+      const direction =
+        !options.combineVoices &&
+        voiceGroups.length > 1 &&
+        !manualStemDirectionBeats.has(beatIndex) &&
+        voiceIndex % 2 === 1
+          ? oppositeStemDirection(voiceGroup[0].stemDirection)
+          : voiceGroup[0].stemDirection;
+      for (const note of voiceGroup) {
+        voiceDirectionByNoteId.set(note.id, direction);
       }
-      consecutive.push(note);
+      const beamedVoice = voiceGroup
+        .map((note) => (note.stemDirection === direction ? note : { ...note, stemDirection: direction }))
+        .sort(
+          (left, right) => left.measureStep - right.measureStep || left.duration - right.duration,
+        );
+      const onsetsByPosition = new Map<number, ScoreFragment[]>();
+      for (const note of beamedVoice) {
+        const onset = onsetsByPosition.get(note.measureStep) ?? [];
+        onset.push(note);
+        onsetsByPosition.set(note.measureStep, onset);
+      }
+      const onsets = [...onsetsByPosition.values()].sort(
+        (left, right) => left[0].measureStep - right[0].measureStep,
+      );
+      let consecutive: ScoreFragment[][] = [];
+      for (const onset of onsets) {
+        const note = onset[0];
+        const previousOnset = consecutive[consecutive.length - 1];
+        const previous = previousOnset?.[0];
+        const previousDuration = previousOnset
+          ? Math.max(...previousOnset.map((item) => item.duration))
+          : 0;
+        const previousSpacing = previous
+          ? (options.ticksPerWholeNote / previousDuration) *
+            (previous.tupletId
+              ? (previous.tupletInTimeOf ?? 1) / (previous.tupletCount ?? 1)
+              : 1)
+          : 0;
+        if (
+          previous &&
+          (note.measureStep - previous.measureStep > previousSpacing + 1e-7 ||
+            (previous.tupletId !== undefined &&
+              note.tupletIndex !== (previous.tupletIndex ?? -1) + 1))
+        ) {
+          addBeam(consecutive.flat(), beatIndex);
+          consecutive = [];
+        }
+        consecutive.push(onset);
+      }
+      addBeam(consecutive.flat(), beatIndex);
     }
-    addBeam(consecutive, beatIndex);
   }
 
   const manualGroups = new Map<string, ScoreFragment[]>();
@@ -401,6 +449,7 @@ function beamNotesForMeasure(
       instrumentId: placed.instrumentId,
       direction: placed.direction,
       levels: placed.levels,
+      segments: placed.segments,
       xStart: placed.xStart,
       xEnd: placed.xEnd,
       y: placed.y,
@@ -417,26 +466,156 @@ function beamNotesForMeasure(
       }
       beamedNotes.set(noteId, {
         id: placed.id,
-        stemOffset: y - note.y - (note.stemDirection === 'down' ? 34 : -34),
+        stemOffset: y - note.y - (placed.direction === 'down' ? 34 : -34),
         stemXOffset: placed.beamOffsetX,
       });
     }
   }
 
-  return {
-    notes: notes.map((note) => {
+  const beamedFragments = notes.map((note) => {
       const beam = beamedNotes.get(note.id);
+      const direction = voiceDirectionByNoteId.get(note.id);
+      const directedNote = direction && direction !== note.stemDirection
+        ? { ...note, stemDirection: direction }
+        : note;
       return beam
         ? {
-            ...note,
+            ...directedNote,
             beamGroupId: beam.id,
             beamStemOffset: beam.stemOffset,
             beamStemXOffset: beam.stemXOffset,
           }
-        : note;
-    }),
+        : directedNote;
+    });
+  return {
+    notes: options.combineVoices ? shareUnbeamedStems(beamedFragments) : beamedFragments,
     beams,
   };
+}
+
+function oppositeStemDirection(direction: StemDirection): StemDirection {
+  return direction === 'up' ? 'down' : 'up';
+}
+
+function shareUnbeamedStems(notes: ScoreFragment[]): ScoreFragment[] {
+  const groups = new Map<string, ScoreFragment[]>();
+  for (const note of notes) {
+    if (!note.stemmed || note.beamGroupId || note.tieArcIn || note.tieArcOut) {
+      continue;
+    }
+    const key = [
+      note.measureStep,
+      note.duration,
+      note.stemDirection,
+      note.beamOffsetX ?? 0,
+      note.tupletId ?? 'regular',
+      note.tupletIndex ?? 'regular',
+    ].join(':');
+    const group = groups.get(key) ?? [];
+    group.push(note);
+    groups.set(key, group);
+  }
+
+  const sharedNotes = new Map<string, ScoreFragment>();
+  for (const group of groups.values()) {
+    if (group.length < 2 || new Set(group.map((note) => note.instrumentId)).size < 2) {
+      continue;
+    }
+    const direction = group[0].stemDirection;
+    const owner = group.reduce((selected, note) =>
+      direction === 'up'
+        ? note.y > selected.y
+          ? note
+          : selected
+        : note.y < selected.y
+          ? note
+          : selected,
+    );
+    const stemEndY =
+      direction === 'up'
+        ? Math.min(...group.map((note) => note.y)) - 34
+        : Math.max(...group.map((note) => note.y)) + 34;
+    for (const note of group) {
+      sharedNotes.set(
+        note.id,
+        note.id === owner.id
+          ? { ...note, stemEndOffset: stemEndY - note.y }
+          : { ...note, stemmed: false },
+      );
+    }
+  }
+
+  return notes.map((note) => sharedNotes.get(note.id) ?? note);
+}
+
+function beamSegmentsForGroup(
+  group: ScoreFragment[],
+  xStart: number,
+  xEnd: number,
+  stemX: number,
+): ScoreBeamSegment[] {
+  const onsetsByStep = new Map<number, { x: number; levels: number }>();
+  for (const note of group) {
+    const x = note.x + stemX + (note.beamOffsetX ?? 0);
+    const onset = onsetsByStep.get(note.measureStep);
+    onsetsByStep.set(note.measureStep, {
+      x,
+      levels: Math.max(onset?.levels ?? 0, note.flagCount),
+    });
+  }
+  const onsets = [...onsetsByStep.values()].sort((left, right) => left.x - right.x);
+  const maxLevels = Math.max(...group.map((note) => note.flagCount));
+  const segments: ScoreBeamSegment[] = [{ level: 0, xStart, xEnd }];
+
+  for (let level = 1; level < maxLevels; level++) {
+    let index = 0;
+    while (index < onsets.length) {
+      if (onsets[index].levels <= level) {
+        index++;
+        continue;
+      }
+      const runStart = index;
+      while (index + 1 < onsets.length && onsets[index + 1].levels > level) {
+        index++;
+      }
+      if (index > runStart) {
+        segments.push({
+          level,
+          xStart: onsets[runStart].x,
+          xEnd: onsets[index].x,
+        });
+      } else {
+        const leftDistance = index > 0 ? onsets[index].x - onsets[index - 1].x : Infinity;
+        const rightDistance =
+          index + 1 < onsets.length ? onsets[index + 1].x - onsets[index].x : Infinity;
+        const direction = rightDistance <= leftDistance ? 1 : -1;
+        const beamletEnd = onsets[index].x + direction * Math.min(leftDistance, rightDistance) / 2;
+        segments.push({
+          level,
+          xStart: Math.min(onsets[index].x, beamletEnd),
+          xEnd: Math.max(onsets[index].x, beamletEnd),
+        });
+      }
+      index++;
+    }
+  }
+
+  return segments;
+}
+
+function partitionInstrumentVoices(notes: ScoreFragment[]): ScoreFragment[][] {
+  const notesByInstrument = new Map<ScoreFragment['instrumentId'], ScoreFragment[]>();
+  for (const note of notes) {
+    const group = notesByInstrument.get(note.instrumentId) ?? [];
+    group.push(note);
+    notesByInstrument.set(note.instrumentId, group);
+  }
+
+  return [...notesByInstrument.values()].sort(
+    (left, right) =>
+      Math.min(...left.map((note) => note.duration)) -
+      Math.min(...right.map((note) => note.duration)),
+  );
 }
 
 function tupletsForMeasure(options: ScoreLayoutOptions): ScoreTupletMarker[] {

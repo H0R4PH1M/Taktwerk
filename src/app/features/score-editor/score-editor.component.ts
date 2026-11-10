@@ -107,6 +107,7 @@ interface UndoEntry {
   tempo?: number;
   noteTextPosition?: NoteTextPosition;
   autoBeaming?: boolean;
+  combineVoices?: boolean;
   stemDirection?: StemDirection;
 }
 
@@ -136,6 +137,7 @@ export class ScoreEditorComponent implements OnDestroy {
   protected readonly selectedRestValue = signal<NoteValue>(4);
   protected readonly selectedInstrumentId = signal<DrumId | null>(null);
   protected readonly autoBeaming = signal(true);
+  protected readonly combineVoices = signal(true);
   protected readonly stemDirection = signal<StemDirection>('up');
   protected readonly tupletsEnabled = signal(false);
   protected readonly tupletCount = signal(3);
@@ -302,6 +304,7 @@ export class ScoreEditorComponent implements OnDestroy {
         numerator: this.timeSignatureNumerator(),
         denominator: this.timeSignatureDenominator(),
         autoBeaming: this.autoBeaming(),
+        combineVoices: this.combineVoices(),
         stemDirection: this.stemDirection(),
         measureWidth: this.measureWidth(),
       });
@@ -564,6 +567,10 @@ export class ScoreEditorComponent implements OnDestroy {
 
   protected setAutoBeaming(event: Event): void {
     this.autoBeaming.set((event.target as HTMLInputElement).checked);
+  }
+
+  protected setCombineVoices(event: Event): void {
+    this.combineVoices.set((event.target as HTMLInputElement).checked);
   }
 
   protected setStemDirection(event: Event): void {
@@ -1859,6 +1866,7 @@ export class ScoreEditorComponent implements OnDestroy {
         denominator: this.timeSignatureDenominator(),
         noteTextPosition: this.noteTextPosition(),
         autoBeaming: this.autoBeaming(),
+        combineVoices: this.combineVoices(),
         stemDirection: this.stemDirection(),
         measures: this.measureIndexes().length,
         pattern: this.pattern(),
@@ -1883,6 +1891,7 @@ export class ScoreEditorComponent implements OnDestroy {
       subdivision: this.subdivisionLabel(),
       noteTextPosition: this.noteTextPosition(),
       autoBeaming: this.autoBeaming(),
+      combineVoices: this.combineVoices(),
       stemDirection: this.stemDirection(),
       pattern: this.pattern(),
       rests: this.rests(),
@@ -1991,6 +2000,9 @@ export class ScoreEditorComponent implements OnDestroy {
     if (entry.autoBeaming !== undefined) {
       this.autoBeaming.set(entry.autoBeaming);
     }
+    if (entry.combineVoices !== undefined) {
+      this.combineVoices.set(entry.combineVoices);
+    }
     if (entry.stemDirection !== undefined) {
       this.stemDirection.set(entry.stemDirection);
     }
@@ -2023,6 +2035,7 @@ export class ScoreEditorComponent implements OnDestroy {
             tempo: this.tempo(),
             noteTextPosition: this.noteTextPosition(),
             autoBeaming: this.autoBeaming(),
+            combineVoices: this.combineVoices(),
             stemDirection: this.stemDirection(),
           }
         : {}),
@@ -2149,6 +2162,7 @@ export class ScoreEditorComponent implements OnDestroy {
     this.timeSignatureDenominator.set(snapshot.denominator);
     this.noteTextPosition.set(snapshot.noteTextPosition ?? 'above');
     this.autoBeaming.set(snapshot.autoBeaming ?? true);
+    this.combineVoices.set(snapshot.combineVoices ?? true);
     this.stemDirection.set(snapshot.stemDirection ?? 'up');
     this.measureIndexes.set(Array.from({ length: snapshot.measures }, (_, index) => index));
     this.pattern.set(this.withStemDirection(snapshot.pattern, snapshot.stemDirection ?? 'up'));

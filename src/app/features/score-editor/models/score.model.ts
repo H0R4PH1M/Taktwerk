@@ -72,6 +72,7 @@ export interface ScoreFragment {
   stemDirection: StemDirection;
   filledHead: boolean;
   stemmed: boolean;
+  stemEndOffset?: number;
   flagCount: number;
   beamOffset?: number;
   beamOffsetX?: number;
@@ -97,11 +98,18 @@ export interface ScoreTupletMarker {
   xEnd: number;
 }
 
+export interface ScoreBeamSegment {
+  level: number;
+  xStart: number;
+  xEnd: number;
+}
+
 export interface ScoreBeamMarker {
   id: string;
   instrumentId: DrumId;
   direction: StemDirection;
   levels: number;
+  segments?: ScoreBeamSegment[];
   xStart: number;
   xEnd: number;
   y: number;
@@ -135,6 +143,7 @@ export interface PatternSnapshot {
   denominator: number;
   noteTextPosition?: NoteTextPosition;
   autoBeaming?: boolean;
+  combineVoices?: boolean;
   stemDirection?: StemDirection;
   pattern: Pattern;
   rests?: RestPattern;

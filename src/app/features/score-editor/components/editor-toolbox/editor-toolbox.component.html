@@ -301,6 +301,15 @@
         <label class="auto-beam-toggle">
           <input
             type="checkbox"
+            aria-label="Noten in einer Stimme zusammenfassen"
+            [checked]="combineVoices()"
+            (change)="combineVoicesChanged.emit($event)"
+          />
+          <span>Stimmen zusammenfassen</span>
+        </label>
+        <label class="auto-beam-toggle">
+          <input
+            type="checkbox"
             aria-label="Neue Noten nach unten"
             [checked]="stemDirection() === 'down'"
             (change)="stemDirectionChanged.emit($event)"

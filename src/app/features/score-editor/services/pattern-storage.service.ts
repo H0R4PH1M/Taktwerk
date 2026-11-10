@@ -18,6 +18,7 @@ interface SavedPatternMetadata {
   denominator: number;
   noteTextPosition?: NoteTextPosition;
   autoBeaming?: boolean;
+  combineVoices?: boolean;
   stemDirection?: StemDirection;
   pattern: unknown;
   rests?: unknown;
@@ -117,6 +118,7 @@ export class PatternStorageService {
       denominator: metadata.denominator,
       noteTextPosition: metadata.noteTextPosition,
       autoBeaming: metadata.autoBeaming,
+      combineVoices: metadata.combineVoices,
       stemDirection: metadata.stemDirection,
       measures: metadata.measures,
       pattern,
@@ -143,6 +145,7 @@ export class PatternStorageService {
       timeSignature?: unknown;
       noteTextPosition?: unknown;
       autoBeaming?: unknown;
+      combineVoices?: unknown;
       stemDirection?: unknown;
       pattern?: unknown;
       rests?: unknown;
@@ -178,6 +181,7 @@ export class PatternStorageService {
         saved.noteTextPosition !== 'above' &&
         saved.noteTextPosition !== 'below') ||
       (saved.autoBeaming !== undefined && typeof saved.autoBeaming !== 'boolean') ||
+      (saved.combineVoices !== undefined && typeof saved.combineVoices !== 'boolean') ||
       (saved.stemDirection !== undefined &&
         saved.stemDirection !== 'up' &&
         saved.stemDirection !== 'down')
@@ -191,6 +195,8 @@ export class PatternStorageService {
       denominator,
       noteTextPosition,
       autoBeaming: typeof saved.autoBeaming === 'boolean' ? saved.autoBeaming : undefined,
+      combineVoices:
+        typeof saved.combineVoices === 'boolean' ? saved.combineVoices : undefined,
       stemDirection:
         saved.stemDirection === 'up' || saved.stemDirection === 'down'
           ? saved.stemDirection

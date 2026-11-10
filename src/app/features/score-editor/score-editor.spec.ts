@@ -935,10 +935,136 @@ describe('ScoreEditorComponent', () => {
     ).toBe('12');
   });
 
+  it('combines matching instrument rhythms by default and can save separate voices', async () => {
+    const fixture = TestBed.createComponent(ScoreEditorComponent);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.clear-button')?.click();
+    fixture.detectChanges();
+
+    const advancedTools = compiled.querySelector<HTMLDetailsElement>('.advanced-tools');
+    if (!advancedTools) {
+      throw new Error('Erweiterte Werkzeuge wurden nicht angezeigt.');
+    }
+    advancedTools.open = true;
+    fixture.detectChanges();
+    const combineVoices = compiled.querySelector<HTMLInputElement>(
+      '[aria-label="Noten in einer Stimme zusammenfassen"]',
+    );
+    if (!combineVoices) {
+      throw new Error('Stimmen-Zusammenfassung wurde nicht angezeigt.');
+    }
+    expect(combineVoices.checked).toBe(true);
+
+    selectNoteValue(fixture, 'Achtelnote');
+    const placeNotes = (instrumentSelector: string) => {
+      const instrumentButton = compiled.querySelector<HTMLButtonElement>(instrumentSelector);
+      if (!instrumentButton) {
+        throw new Error('Instrumentauswahl wurde nicht angezeigt.');
+      }
+      instrumentButton.click();
+      fixture.detectChanges();
+      for (const step of [0, 8]) {
+        const target = compiled.querySelector<SVGRectElement>(
+          `.measure-sheet[aria-label="Takt 1"] .placement-target[data-step="${step}"]`,
+        );
+        if (!target) {
+          throw new Error('Notenblatt-Ziel wurde nicht angezeigt.');
+        }
+        target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        fixture.detectChanges();
+      }
+    };
+    placeNotes('[aria-label*="Hi-Hat"]');
+    placeNotes('[aria-label="Instrument Snare auswählen"]');
+
+    let beams = compiled.querySelectorAll('.measure-sheet[aria-label="Takt 1"] .score-beam');
+    const notes = compiled.querySelectorAll<SVGGElement>(
+      '.measure-sheet[aria-label="Takt 1"] .score-note[data-duration="8"]',
+    );
+    expect(beams).toHaveLength(1);
+    expect(notes).toHaveLength(4);
+    expect(new Set([...notes].map((note) => note.getAttribute('data-beam-group-id'))).size).toBe(1);
+
+    combineVoices.checked = false;
+    combineVoices.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    beams = compiled.querySelectorAll('.measure-sheet[aria-label="Takt 1"] .score-beam');
+    expect(beams).toHaveLength(2);
+
+    compiled.querySelector<HTMLButtonElement>('.save-button')?.click();
+    expect(
+      JSON.parse(localStorage.getItem('taktwerk-pattern-v1') ?? '{}').combineVoices,
+    ).toBe(false);
+    fixture.destroy();
+
+    const restoredFixture = TestBed.createComponent(ScoreEditorComponent);
+    await restoredFixture.whenStable();
+    const restored = restoredFixture.nativeElement as HTMLElement;
+    expect(
+      restored.querySelector<HTMLInputElement>(
+        '[aria-label="Noten in einer Stimme zusammenfassen"]',
+      )?.checked,
+    ).toBe(false);
+    expect(restored.querySelectorAll('.measure-sheet[aria-label="Takt 1"] .score-beam')).toHaveLength(
+      2,
+    );
+  });
+
+  it('connects mixed-duration note stems to the primary beam', async () => {
+    const fixture = TestBed.createComponent(ScoreEditorComponent);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.clear-button')?.click();
+    fixture.detectChanges();
+
+    const placeNote = (step: number) => {
+      const target = compiled.querySelector<SVGRectElement>(
+        `.measure-sheet[aria-label="Takt 1"] .placement-target[data-step="${step}"]`,
+      );
+      if (!target) {
+        throw new Error('Notenblatt-Ziel wurde nicht angezeigt.');
+      }
+      target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      fixture.detectChanges();
+    };
+
+    compiled
+      .querySelector<HTMLButtonElement>('[aria-label="Instrument Hi-Hat geschlossen auswählen"]')
+      ?.click();
+    selectNoteValue(fixture, 'Achtelnote');
+    placeNote(0);
+    placeNote(8);
+    compiled
+      .querySelector<HTMLButtonElement>('[aria-label="Instrument Snare auswählen"]')
+      ?.click();
+    selectNoteValue(fixture, 'Sechzehntelnote');
+    placeNote(4);
+
+    const beam = compiled.querySelector<SVGGElement>('.score-beam');
+    if (!beam) {
+      throw new Error('Gemischte Notengruppe wurde nicht verbunden.');
+    }
+    const beamId = beam.getAttribute('data-beam-id');
+    const beamY = Number(beam.getAttribute('data-y'));
+    const groupedNotes = [...compiled.querySelectorAll<SVGGElement>('.score-note')].filter(
+      (note) => note.getAttribute('data-beam-group-id') === beamId,
+    );
+
+    expect(groupedNotes).toHaveLength(3);
+    for (const note of groupedNotes) {
+      const noteY = Number(note.getAttribute('transform')?.match(/translate\([^ ]+ ([^)]+)\)/)?.[1]);
+      const stemY = Number(note.querySelector('.note-stem')?.getAttribute('y2'));
+      expect(noteY + stemY).toBe(beamY);
+    }
+  });
+
   it('automatically beams eighth and sixteenth notes and persists the off setting', async () => {
     const fixture = TestBed.createComponent(ScoreEditorComponent);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.clear-button')?.click();
+    fixture.detectChanges();
     const autoBeaming = compiled.querySelector<HTMLInputElement>(
       '[aria-label="Noten automatisch verbinden"]',
     );
@@ -1717,6 +1843,23 @@ describe('ScoreEditorComponent', () => {
     const fixture = TestBed.createComponent(ScoreEditorComponent);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.clear-button')?.click();
+    fixture.detectChanges();
+    const advancedTools = compiled.querySelector<HTMLDetailsElement>('.advanced-tools');
+    if (!advancedTools) {
+      throw new Error('Erweiterte Werkzeuge wurden nicht angezeigt.');
+    }
+    advancedTools.open = true;
+    fixture.detectChanges();
+    const combineVoices = compiled.querySelector<HTMLInputElement>(
+      '[aria-label="Noten in einer Stimme zusammenfassen"]',
+    );
+    if (!combineVoices) {
+      throw new Error('Stimmen-Zusammenfassung wurde nicht angezeigt.');
+    }
+    combineVoices.checked = false;
+    combineVoices.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
     const placeNote = (step: number, instrumentY: number) => {
       const target = compiled.querySelector<SVGRectElement>(
         `.measure-sheet[aria-label="Takt 1"] .placement-target[data-step="${step}"]`,
@@ -1747,20 +1890,32 @@ describe('ScoreEditorComponent', () => {
     if (!crashBeam || !openHatBeam) {
       throw new Error('Erwartete Notenverbindungen wurden nicht gezeichnet.');
     }
-    const crashTop = Number(crashBeam.getAttribute('data-y'));
-    const crashBottom = crashTop + (Number(crashBeam.getAttribute('data-levels')) - 1) * 5 + 3;
+    const beamBounds = (beam: SVGGElement) => {
+      const y = Number(beam.getAttribute('data-y'));
+      const height = (Number(beam.getAttribute('data-levels')) - 1) * 5 + 3;
+      return beam.getAttribute('data-direction') === 'down'
+        ? { top: y - height, bottom: y }
+        : { top: y, bottom: y + height };
+    };
+    const crashBounds = beamBounds(crashBeam);
+    const openHatBounds = beamBounds(openHatBeam);
+    const upperBeam = crashBounds.top < openHatBounds.top ? crashBounds : openHatBounds;
+    const lowerBeam = upperBeam === crashBounds ? openHatBounds : crashBounds;
+    expect(crashBeam.getAttribute('data-direction')).toBe('down');
+    expect(openHatBeam.getAttribute('data-direction')).toBe('up');
+    expect(upperBeam.bottom).toBeLessThanOrEqual(lowerBeam.top - 2);
     const openHatTop = Number(openHatBeam.getAttribute('data-y'));
-    const openHatBottom =
-      openHatTop + (Number(openHatBeam.getAttribute('data-levels')) - 1) * 5 + 3;
-    expect(openHatBottom).toBeLessThanOrEqual(crashTop - 2);
     const openHatNote = compiled.querySelector<SVGGElement>(
       '.measure-sheet[aria-label="Takt 1"] .score-note[data-instrument="openHat"]',
     );
     const openHatStemOffset = Number(openHatNote?.getAttribute('data-beam-stem-offset'));
+    const openHatNoteY = Number(
+      openHatNote?.getAttribute('transform')?.match(/translate\([^ ]+ ([^)]+)\)/)?.[1],
+    );
     expect(openHatNote?.querySelector('.note-stem')?.getAttribute('y2')).toBe(
       String(-34 + openHatStemOffset),
     );
-    expect(openHatStemOffset).toBe(openHatTop - 10);
+    expect(openHatStemOffset).toBe(openHatTop - openHatNoteY + 34);
   });
 
   it('places a configurable 5:4 tuplet at consecutive proportional positions', async () => {

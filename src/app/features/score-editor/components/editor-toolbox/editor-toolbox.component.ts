@@ -90,6 +90,7 @@ export class EditorToolboxComponent {
   readonly selectedRestValue = input.required<NoteValue>();
   readonly stepsPerMeasure = input.required<number>();
   readonly autoBeaming = input.required<boolean>();
+  readonly combineVoices = input.required<boolean>();
   readonly stemDirection = input.required<StemDirection>();
   readonly selectedNoteCount = input.required<number>();
   readonly selectedObjectCount = input.required<number>();
@@ -116,6 +117,7 @@ export class EditorToolboxComponent {
   readonly noteValueSelected = output<NoteValue>();
   readonly restValueSelected = output<NoteValue>();
   readonly autoBeamingChanged = output<Event>();
+  readonly combineVoicesChanged = output<Event>();
   readonly stemDirectionChanged = output<Event>();
   readonly selectedStemDirectionChanged = output<StemDirection>();
   readonly selectionCleared = output<void>();

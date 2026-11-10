@@ -151,16 +151,19 @@ export class ScoreSheetComponent {
     return Array.from({ length: levels }, (_, index) => index);
   }
 
-  beamStemEnd(levels: number, offset: number, direction: StemDirection): number {
-    return direction === 'down'
-      ? 34 + offset - (levels - 1) * 5
-      : -34 + offset + (levels - 1) * 5;
+  beamStemEnd(offset: number, direction: StemDirection): number {
+    return direction === 'down' ? 34 + offset : -34 + offset;
   }
 
-  beamPath(beam: ScoreBeamMarker, level: number): string {
+  beamPath(
+    beam: ScoreBeamMarker,
+    level: number,
+    xStart = beam.xStart,
+    xEnd = beam.xEnd,
+  ): string {
     const y = beam.y + (beam.direction === 'down' ? -level * 5 : level * 5);
     const outerY = y + (beam.direction === 'down' ? -3 : 3);
-    return `M ${beam.xStart} ${y} L ${beam.xEnd} ${y} L ${beam.xEnd} ${outerY} L ${beam.xStart} ${outerY} Z`;
+    return `M ${xStart} ${y} L ${xEnd} ${y} L ${xEnd} ${outerY} L ${xStart} ${outerY} Z`;
   }
 
   protected handlePlacementClick(event: Event, measureIndex: number, step: number): void {
